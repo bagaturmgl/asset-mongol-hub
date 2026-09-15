@@ -14,7 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      equipment: {
+        Row: {
+          category: string
+          created_at: string
+          factory_serial: string | null
+          id: string
+          main_equipment: string
+          manufacturer: string | null
+          model: string | null
+          notes: string | null
+          section: string
+          sequence: string
+          status: string
+          sub_section: string
+          subtype: string
+          tag_name: string
+          unit: string
+          updated_at: string
+          year: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          factory_serial?: string | null
+          id?: string
+          main_equipment: string
+          manufacturer?: string | null
+          model?: string | null
+          notes?: string | null
+          section: string
+          sequence: string
+          status?: string
+          sub_section: string
+          subtype: string
+          tag_name: string
+          unit: string
+          updated_at?: string
+          year: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          factory_serial?: string | null
+          id?: string
+          main_equipment?: string
+          manufacturer?: string | null
+          model?: string | null
+          notes?: string | null
+          section?: string
+          sequence?: string
+          status?: string
+          sub_section?: string
+          subtype?: string
+          tag_name?: string
+          unit?: string
+          updated_at?: string
+          year?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
