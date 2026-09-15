@@ -54,6 +54,11 @@ export function EquipmentDetail({
                 <div className="sm:col-span-2">
                   <Row label="Байршил / Тайлбар">{item.notes || "—"}</Row>
                 </div>
+                <div className="sm:col-span-2">
+                  <Row label="Засвар үйлчилгээний түүх">
+                    <span className="whitespace-pre-wrap">{item.maintenance_history || "—"}</span>
+                  </Row>
+                </div>
               </dl>
 
               <div className="flex flex-col items-center gap-2 rounded-xl border bg-card p-4">

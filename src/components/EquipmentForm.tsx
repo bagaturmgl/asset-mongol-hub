@@ -40,6 +40,7 @@ type FormState = {
   factory_serial: string;
   status: string;
   notes: string;
+  maintenance_history: string;
 };
 
 const emptyForm: FormState = {
@@ -56,6 +57,7 @@ const emptyForm: FormState = {
   factory_serial: "",
   status: "active",
   notes: "",
+  maintenance_history: "",
 };
 
 export function EquipmentForm({
@@ -84,6 +86,7 @@ export function EquipmentForm({
         factory_serial: editing.factory_serial ?? "",
         status: editing.status,
         notes: editing.notes ?? "",
+        maintenance_history: editing.maintenance_history ?? "",
       });
     } else {
       setForm(emptyForm);
@@ -116,6 +119,7 @@ export function EquipmentForm({
       model: form.model.trim() || null,
       factory_serial: form.factory_serial.trim() || null,
       notes: form.notes.trim() || null,
+      maintenance_history: form.maintenance_history.trim() || null,
     };
 
     const { error } = editing
@@ -288,6 +292,15 @@ export function EquipmentForm({
           rows={3}
           placeholder="Насосны гаралтын даралт, шүүгээ №2"
           onChange={(e) => set("notes", e.target.value)}
+        />
+      </Field>
+
+      <Field label="Засвар үйлчилгээний түүх">
+        <Textarea
+          value={form.maintenance_history}
+          rows={4}
+          placeholder={"2026-03-12 — Битүүмж солих\n2026-06-20 — Калибровка хийх"}
+          onChange={(e) => set("maintenance_history", e.target.value)}
         />
       </Field>
 
