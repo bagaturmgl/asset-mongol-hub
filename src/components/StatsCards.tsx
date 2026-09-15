@@ -1,4 +1,4 @@
-import { Activity, Cpu, Gauge, Sliders } from "lucide-react";
+import { Activity, CalendarClock, Cpu, Gauge, Sliders } from "lucide-react";
 
 import { Equipment } from "@/lib/equipment";
 
@@ -12,10 +12,11 @@ export function StatsCards({ items }: { items: Equipment[] }) {
     { label: "Сенсор (S)", value: count("S"), icon: Gauge, hint: "даралт, температур, түвшин" },
     { label: "Хувиргагч (C)", value: count("C"), icon: Sliders, hint: "гүйдэл, чадал, жин" },
     { label: "Actuator (A)", value: count("A"), icon: Activity, hint: "клапан, соленоид" },
+    { label: "Шинэ бүртгэл", value: recent, icon: CalendarClock, hint: "сүүлийн 7 хоног" },
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
       {cards.map((card) => (
         <div key={card.label} className="rounded-xl border bg-card p-4 shadow-sm">
           <div className="flex items-start justify-between">
@@ -28,7 +29,6 @@ export function StatsCards({ items }: { items: Equipment[] }) {
           <p className="mt-1 text-xs text-muted-foreground">{card.hint}</p>
         </div>
       ))}
-      <p className="sr-only">Сүүлийн 7 хоногт: {recent}</p>
     </div>
   );
 }
