@@ -1,0 +1,1 @@
+ALTER TABLE public.equipment ADD COLUMN maintenance_history TEXT;
