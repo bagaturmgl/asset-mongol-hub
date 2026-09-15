@@ -14,6 +14,7 @@ export type Equipment = {
   factory_serial: string | null;
   status: string;
   notes: string | null;
+  maintenance_history: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -105,6 +106,7 @@ export function toCsv(rows: Equipment[]) {
     "Сериал №",
     "Төлөв",
     "Байршил/Тайлбар",
+    "Засвар үйлчилгээний түүх",
     "Бүртгэсэн",
   ];
   const esc = (val: unknown) => `"${String(val ?? "").replace(/"/g, '""')}"`;
@@ -124,6 +126,7 @@ export function toCsv(rows: Equipment[]) {
       r.factory_serial,
       statusLabel(r.status),
       r.notes,
+      r.maintenance_history,
       new Date(r.created_at).toLocaleDateString("mn-MN"),
     ]
       .map(esc)
