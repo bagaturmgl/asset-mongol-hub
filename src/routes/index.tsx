@@ -25,12 +25,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import {
   CATEGORIES,
   Equipment,
   SECTIONS,
   UNITS,
+  appendMaintenance,
+  lastMaintenance,
+  parseMaintenance,
   statusLabel,
   toCsv,
 } from "@/lib/equipment";
