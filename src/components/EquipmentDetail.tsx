@@ -19,6 +19,7 @@ import {
   Equipment,
   categoryLabel,
   parseMaintenance,
+  sectionLabel,
   statusLabel,
   subtypeLabel,
 } from "@/lib/equipment";
@@ -72,7 +73,7 @@ export function EquipmentDetail({
                     <Badge variant="secondary">{statusLabel(item.status)}</Badge>
                   </Row>
                   <Row label="Үйлчилгээ эрхлэгч">{item.unit}</Row>
-                  <Row label="Үндсэн хэсэг">{item.section}</Row>
+                  <Row label="Үндсэн хэсэг">{sectionLabel(item.section)}</Row>
                   <Row label="Дэд хэсэг">{item.sub_section}</Row>
                   <Row label="Үндсэн тоног төхөөрөмж">{item.main_equipment}</Row>
                   <Row label="Үндсэн ангилал">{categoryLabel(item.category)}</Row>
@@ -83,7 +84,7 @@ export function EquipmentDetail({
                   <Row label="Модель">{item.model || "—"}</Row>
                   <Row label="Үйлдвэрийн сериал №">{item.factory_serial || "—"}</Row>
                   <div className="sm:col-span-2">
-                    <Row label="Байршил / Тайлбар">{item.notes || "—"}</Row>
+                    <Row label="Ашиглалтын явцын түүх">{item.notes || "—"}</Row>
                   </div>
                   <div className="sm:col-span-2">
                     <Row label="Засвар үйлчилгээний түүх">

@@ -286,11 +286,11 @@ export function EquipmentForm({
         </Field>
       </div>
 
-      <Field label="Байршил / Тайлбар">
+      <Field label="Ашиглалтын явцын түүх">
         <Textarea
           value={form.notes}
           rows={3}
-          placeholder="Насосны гаралтын даралт, шүүгээ №2"
+          placeholder="Ашиглалтын явцад гарсан өөрчлөлт, тэмдэглэл"
           onChange={(e) => set("notes", e.target.value)}
         />
       </Field>

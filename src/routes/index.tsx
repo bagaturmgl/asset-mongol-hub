@@ -35,6 +35,7 @@ import {
   appendMaintenance,
   lastMaintenance,
   parseMaintenance,
+  sectionLabel,
   statusLabel,
   toCsv,
 } from "@/lib/equipment";
@@ -277,7 +278,7 @@ function Index() {
                     <TableCell className="font-mono text-xs font-medium">{item.tag_name}</TableCell>
                     <TableCell>{item.unit}</TableCell>
                     <TableCell>
-                      {item.section} / {item.sub_section} / {item.main_equipment}
+                      {sectionLabel(item.section)} / {item.sub_section} / {item.main_equipment}
                     </TableCell>
                     <TableCell className="font-mono">
                       {item.category}
