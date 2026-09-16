@@ -256,14 +256,14 @@ function Index() {
               <TableBody>
                 {isLoading && (
                   <TableRow>
-                    <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={10} className="py-10 text-center text-muted-foreground">
                       <Loader2 className="mx-auto size-5 animate-spin" />
                     </TableCell>
                   </TableRow>
                 )}
                 {!isLoading && !filtered.length && (
                   <TableRow>
-                    <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={10} className="py-10 text-center text-muted-foreground">
                       Бүртгэл олдсонгүй.
                     </TableCell>
                   </TableRow>
@@ -296,6 +296,9 @@ function Index() {
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {new Date(item.created_at).toLocaleDateString("mn-MN")}
+                    </TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <MaintenanceCell item={item} />
                     </TableCell>
                   </TableRow>
                 ))}
