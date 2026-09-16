@@ -25,12 +25,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import {
   CATEGORIES,
   Equipment,
   SECTIONS,
   UNITS,
+  appendMaintenance,
+  lastMaintenance,
+  parseMaintenance,
   statusLabel,
   toCsv,
 } from "@/lib/equipment";
@@ -90,6 +94,22 @@ function Index() {
     },
     onError: () => toast.error("Устгахад алдаа гарлаа."),
   });
+
+  const addMaintenance = useMutation({
+    mutationFn: async ({ item, date, note }: { item: Equipment; date: string; note: string }) => {
+      const { error } = await supabase
+        .from("equipment")
+        .update({ maintenance_history: appendMaintenance(item.maintenance_history, date, note) })
+        .eq("id", item.id);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success("Засвар үйлчилгээ нэмэгдлээ.");
+      await queryClient.invalidateQueries({ queryKey: ["equipment"] });
+    },
+    onError: () => toast.error("Засвар нэмэхэд алдаа гарлаа."),
+  });
+
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -230,19 +250,20 @@ function Index() {
                   <TableHead>Он</TableHead>
                   <TableHead>Төлөв</TableHead>
                   <TableHead>Бүртгэсэн</TableHead>
+                  <TableHead>Үйлчилгээ</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading && (
                   <TableRow>
-                    <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={10} className="py-10 text-center text-muted-foreground">
                       <Loader2 className="mx-auto size-5 animate-spin" />
                     </TableCell>
                   </TableRow>
                 )}
                 {!isLoading && !filtered.length && (
                   <TableRow>
-                    <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={10} className="py-10 text-center text-muted-foreground">
                       Бүртгэл олдсонгүй.
                     </TableCell>
                   </TableRow>
@@ -276,6 +297,9 @@ function Index() {
                     <TableCell className="text-xs text-muted-foreground">
                       {new Date(item.created_at).toLocaleDateString("mn-MN")}
                     </TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <MaintenanceCell item={item} />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -296,8 +320,51 @@ function Index() {
           window.scrollTo({ top: 0, behavior: "smooth" });
         }}
         onDelete={(item) => removeItem.mutate(item.id)}
+        savingMaintenance={addMaintenance.isPending}
+        onAddMaintenance={async (item, date, note) => {
+          await addMaintenance.mutateAsync({ item, date, note });
+          setSelected({
+            ...item,
+            maintenance_history: appendMaintenance(item.maintenance_history, date, note),
+          });
+        }}
       />
     </div>
+  );
+}
+
+function MaintenanceCell({ item }: { item: Equipment }) {
+  const entries = parseMaintenance(item.maintenance_history);
+  const last = lastMaintenance(item.maintenance_history);
+
+  if (!entries.length) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-auto px-2 py-1 font-mono text-xs">
+          {last?.date || "—"}
+          <span className="ml-1 font-sans text-[10px] text-muted-foreground">
+            ({entries.length})
+          </span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Засвар үйлчилгээний түүх
+        </p>
+        <ul className="max-h-64 space-y-2 overflow-y-auto">
+          {entries.map((e, i) => (
+            <li key={i} className="border-b pb-2 last:border-0 last:pb-0">
+              <span className="block font-mono text-xs text-muted-foreground">{e.date || "—"}</span>
+              <span className="text-sm">{e.note}</span>
+            </li>
+          ))}
+        </ul>
+      </PopoverContent>
+    </Popover>
   );
 }
 

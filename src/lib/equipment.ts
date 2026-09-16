@@ -76,6 +76,35 @@ export function subtypeLabel(category: string, code: string) {
   return SUBTYPES[category]?.find((s) => s.code === code)?.label ?? code;
 }
 
+export type MaintenanceEntry = { date: string; note: string };
+
+export function parseMaintenance(text: string | null): MaintenanceEntry[] {
+  if (!text) return [];
+  const entries = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const match = line.match(/^(\d{4}[-/.]\d{1,2}[-/.]\d{1,2})\s*[—–-]?\s*(.*)$/);
+      if (match) return { date: (match[1] ?? "").replace(/[/.]/g, "-"), note: match[2] ?? "" };
+      return { date: "", note: line };
+    });
+  return entries.sort((a, b) => b.date.localeCompare(a.date));
+}
+
+export function lastMaintenance(text: string | null): MaintenanceEntry | null {
+  return parseMaintenance(text).find((e) => e.date) ?? parseMaintenance(text)[0] ?? null;
+}
+
+export function appendMaintenance(
+  text: string | null,
+  date: string,
+  note: string,
+): string {
+  const line = `${date} — ${note.trim()}`;
+  return text && text.trim() ? `${text.trim()}\n${line}` : line;
+}
+
 export function buildTag(v: {
   unit: string;
   section: string;
