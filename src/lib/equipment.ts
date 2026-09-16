@@ -86,7 +86,7 @@ export function parseMaintenance(text: string | null): MaintenanceEntry[] {
     .filter(Boolean)
     .map((line) => {
       const match = line.match(/^(\d{4}[-/.]\d{1,2}[-/.]\d{1,2})\s*[—–-]?\s*(.*)$/);
-      if (match) return { date: match[1].replace(/[/.]/g, "-"), note: match[2] || "" };
+      if (match) return { date: (match[1] ?? "").replace(/[/.]/g, "-"), note: match[2] ?? "" };
       return { date: "", note: line };
     });
   return entries.sort((a, b) => b.date.localeCompare(a.date));
