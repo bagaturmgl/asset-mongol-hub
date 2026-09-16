@@ -320,8 +320,51 @@ function Index() {
           window.scrollTo({ top: 0, behavior: "smooth" });
         }}
         onDelete={(item) => removeItem.mutate(item.id)}
+        savingMaintenance={addMaintenance.isPending}
+        onAddMaintenance={async (item, date, note) => {
+          await addMaintenance.mutateAsync({ item, date, note });
+          setSelected({
+            ...item,
+            maintenance_history: appendMaintenance(item.maintenance_history, date, note),
+          });
+        }}
       />
     </div>
+  );
+}
+
+function MaintenanceCell({ item }: { item: Equipment }) {
+  const entries = parseMaintenance(item.maintenance_history);
+  const last = lastMaintenance(item.maintenance_history);
+
+  if (!entries.length) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-auto px-2 py-1 font-mono text-xs">
+          {last?.date || "—"}
+          <span className="ml-1 font-sans text-[10px] text-muted-foreground">
+            ({entries.length})
+          </span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Засвар үйлчилгээний түүх
+        </p>
+        <ul className="max-h-64 space-y-2 overflow-y-auto">
+          {entries.map((e, i) => (
+            <li key={i} className="border-b pb-2 last:border-0 last:pb-0">
+              <span className="block font-mono text-xs text-muted-foreground">{e.date || "—"}</span>
+              <span className="text-sm">{e.note}</span>
+            </li>
+          ))}
+        </ul>
+      </PopoverContent>
+    </Popover>
   );
 }
 
