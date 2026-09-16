@@ -95,6 +95,22 @@ function Index() {
     onError: () => toast.error("Устгахад алдаа гарлаа."),
   });
 
+  const addMaintenance = useMutation({
+    mutationFn: async ({ item, date, note }: { item: Equipment; date: string; note: string }) => {
+      const { error } = await supabase
+        .from("equipment")
+        .update({ maintenance_history: appendMaintenance(item.maintenance_history, date, note) })
+        .eq("id", item.id);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success("Засвар үйлчилгээ нэмэгдлээ.");
+      await queryClient.invalidateQueries({ queryKey: ["equipment"] });
+    },
+    onError: () => toast.error("Засвар нэмэхэд алдаа гарлаа."),
+  });
+
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return items.filter((item) => {
@@ -234,6 +250,7 @@ function Index() {
                   <TableHead>Он</TableHead>
                   <TableHead>Төлөв</TableHead>
                   <TableHead>Бүртгэсэн</TableHead>
+                  <TableHead>Үйлчилгээ</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
