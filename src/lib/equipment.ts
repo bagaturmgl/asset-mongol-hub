@@ -22,12 +22,12 @@ export type Equipment = {
 export const UNITS = ["A", "B", "C", "D"] as const;
 
 export const SECTIONS = [
-  { code: "KSI", label: "KSI — Түлш хангамж" },
-  { code: "DTO", label: "DTO — Дизель тос" },
-  { code: "IFO", label: "IFO — Хүнд түлш" },
-  { code: "RO", label: "RO — Ус цэвэршүүлэлт" },
-  { code: "FSO", label: "FSO — Түлш хадгалалт" },
-  { code: "PNS", label: "PNS — Насосны станц" },
+  { code: "KSI", label: "KSI — Өөрөө нунтаглах" },
+  { code: "IFO", label: "IFO — Нунтаглан баяжуулах" },
+  { code: "DTO", label: "DTO — Бутлан тээвэрлэх" },
+  { code: "FSO", label: "FSO — Шүүн хатаах" },
+  { code: "RO", label: "RO — Урвалжийн бэлтгэх" },
+  { code: "PNS", label: "PNS — Хаягдлын шахуургын" },
 ] as const;
 
 export const SUB_SECTIONS = ["F1", "F2", "F3", "F4"] as const;
@@ -70,6 +70,10 @@ export function statusLabel(code: string) {
 
 export function categoryLabel(code: string) {
   return CATEGORIES.find((c) => c.code === code)?.label ?? code;
+}
+
+export function sectionLabel(code: string) {
+  return SECTIONS.find((section) => section.code === code)?.label ?? code;
 }
 
 export function subtypeLabel(category: string, code: string) {
@@ -134,7 +138,7 @@ export function toCsv(rows: Equipment[]) {
     "Модель",
     "Сериал №",
     "Төлөв",
-    "Байршил/Тайлбар",
+    "Ашиглалтын явцын түүх",
     "Засвар үйлчилгээний түүх",
     "Бүртгэсэн",
   ];
@@ -143,7 +147,7 @@ export function toCsv(rows: Equipment[]) {
     [
       r.tag_name,
       r.unit,
-      r.section,
+      sectionLabel(r.section),
       r.sub_section,
       r.main_equipment,
       r.category,
