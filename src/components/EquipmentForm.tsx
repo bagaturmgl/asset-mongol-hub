@@ -97,7 +97,9 @@ export function EquipmentForm({
   const configuredSubSections = SUB_SECTIONS[form.section] ?? [];
   const subSectionOptions = configuredSubSections.some((item) => item.code === form.sub_section)
     ? configuredSubSections
-    : [{ code: form.sub_section, label: form.sub_section }, ...configuredSubSections];
+    : form.sub_section
+      ? [{ code: form.sub_section, label: form.sub_section }, ...configuredSubSections]
+      : configuredSubSections;
   const tag = useMemo(() => buildTag(form), [form]);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
@@ -173,7 +175,7 @@ export function EquipmentForm({
         </Field>
 
         <Field label="Дэд хэсэг">
-          <Picker value={form.sub_section} onChange={(v) => set("sub_section", v)}>
+          <Picker value={form.sub_section} onChange={(v) => v && set("sub_section", v)}>
             {subSectionOptions.map((s) => (
               <SelectItem key={s.code} value={s.code}>
                 {s.label}
