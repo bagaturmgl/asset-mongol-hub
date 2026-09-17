@@ -30,7 +30,43 @@ export const SECTIONS = [
   { code: "PNS", label: "PNS — Хаягдлын шахуургын" },
 ] as const;
 
-export const SUB_SECTIONS = ["F1", "F2", "F3", "F4"] as const;
+export const SUB_SECTIONS: Record<string, { code: string; label: string }[]> = {
+  KSI: [
+    { code: "S1", label: "1-р секц" },
+    { code: "S2", label: "2-р секц" },
+    { code: "S3", label: "3-р секц" },
+    { code: "S4", label: "4-р секц" },
+    { code: "KKD2", label: "Том бутлуур-2" },
+    { code: "PS", label: "Эргэлтийн усны станц" },
+  ],
+  IFO: [
+    { code: "S1", label: "1-р секц" },
+    { code: "S2", label: "2-р секц" },
+    { code: "S3", label: "3-р секц" },
+    { code: "S4", label: "4-р секц" },
+    { code: "S5", label: "5-р секц" },
+    { code: "S6", label: "6-р секц" },
+    { code: "MS", label: "Үндсэн селекц" },
+    { code: "SS", label: "Нөөц селекц" },
+    { code: "NMS", label: "Шинэ Молибден" },
+    { code: "OMS", label: "Хуучин Молибден" },
+    { code: "ML", label: "Нунтаглах цикл" },
+  ],
+  DTO: [
+    { code: "KKD1", label: "Том бутлуур-1" },
+    { code: "KSD", label: "Дунд бутлуур" },
+    { code: "KMD", label: "Жижиг бутлуур" },
+    { code: "HPGR", label: "Өндөр даралтын булт бутлуур" },
+    { code: "SKDR", label: "ТБХ Агуулах" },
+  ],
+  FSO: [
+    { code: "CC", label: "Зэсийн баяжмал" },
+    { code: "MC", label: "Молибдений баяжмал" },
+    { code: "MN", label: "Ерөнхий" },
+  ],
+  RO: [{ code: "0", label: "0" }],
+  PNS: [{ code: "0", label: "0" }],
+};
 export const MAIN_EQUIPMENTS = ["M1", "M2", "M3", "M4", "M5"] as const;
 
 export const CATEGORIES = [
@@ -74,6 +110,10 @@ export function categoryLabel(code: string) {
 
 export function sectionLabel(code: string) {
   return SECTIONS.find((section) => section.code === code)?.label ?? code;
+}
+
+export function subSectionLabel(section: string, code: string) {
+  return SUB_SECTIONS[section]?.find((subSection) => subSection.code === code)?.label ?? code;
 }
 
 export function subtypeLabel(category: string, code: string) {
@@ -148,7 +188,7 @@ export function toCsv(rows: Equipment[]) {
       r.tag_name,
       r.unit,
       sectionLabel(r.section),
-      r.sub_section,
+      subSectionLabel(r.section, r.sub_section),
       r.main_equipment,
       r.category,
       r.subtype,

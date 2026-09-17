@@ -21,6 +21,7 @@ import {
   parseMaintenance,
   sectionLabel,
   statusLabel,
+  subSectionLabel,
   subtypeLabel,
 } from "@/lib/equipment";
 
@@ -74,7 +75,7 @@ export function EquipmentDetail({
                   </Row>
                   <Row label="Үйлчилгээ эрхлэгч">{item.unit}</Row>
                   <Row label="Үндсэн хэсэг">{sectionLabel(item.section)}</Row>
-                  <Row label="Дэд хэсэг">{item.sub_section}</Row>
+                  <Row label="Дэд хэсэг">{subSectionLabel(item.section, item.sub_section)}</Row>
                   <Row label="Үндсэн тоног төхөөрөмж">{item.main_equipment}</Row>
                   <Row label="Үндсэн ангилал">{categoryLabel(item.category)}</Row>
                   <Row label="Дэд ангилал">{subtypeLabel(item.category, item.subtype)}</Row>
