@@ -46,7 +46,7 @@ type FormState = {
 const emptyForm: FormState = {
   unit: "A",
   section: "KSI",
-  sub_section: "F1",
+  sub_section: "S1",
   main_equipment: "M1",
   category: "S",
   subtype: "P",
@@ -94,6 +94,10 @@ export function EquipmentForm({
   }, [editing]);
 
   const subtypeOptions = SUBTYPES[form.category] ?? [];
+  const configuredSubSections = SUB_SECTIONS[form.section] ?? [];
+  const subSectionOptions = configuredSubSections.some((item) => item.code === form.sub_section)
+    ? configuredSubSections
+    : [{ code: form.sub_section, label: form.sub_section }, ...configuredSubSections];
   const tag = useMemo(() => buildTag(form), [form]);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
@@ -102,6 +106,11 @@ export function EquipmentForm({
   const onCategoryChange = (category: string) => {
     const first = SUBTYPES[category]?.[0]?.code ?? "";
     setForm((prev) => ({ ...prev, category, subtype: first }));
+  };
+
+  const onSectionChange = (section: string) => {
+    const first = SUB_SECTIONS[section]?.[0]?.code ?? "0";
+    setForm((prev) => ({ ...prev, section, sub_section: first }));
   };
 
   async function handleSubmit(event: React.FormEvent) {
@@ -154,7 +163,7 @@ export function EquipmentForm({
         </Field>
 
         <Field label="Үндсэн хэсэг">
-          <Picker value={form.section} onChange={(v) => set("section", v)}>
+          <Picker value={form.section} onChange={onSectionChange}>
             {SECTIONS.map((s) => (
               <SelectItem key={s.code} value={s.code}>
                 {s.label}
@@ -165,9 +174,9 @@ export function EquipmentForm({
 
         <Field label="Дэд хэсэг">
           <Picker value={form.sub_section} onChange={(v) => set("sub_section", v)}>
-            {SUB_SECTIONS.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
+            {subSectionOptions.map((s) => (
+              <SelectItem key={s.code} value={s.code}>
+                {s.label}
               </SelectItem>
             ))}
           </Picker>

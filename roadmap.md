@@ -7,3 +7,4 @@
 - [x] Detail modal with QR code, edit, delete
 - [x] CSV export
 - [x] Dashboard stats
+- [x] Section-specific subsection names and Tag codes
