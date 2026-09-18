@@ -21,6 +21,7 @@ export type Database = {
           factory_serial: string | null
           id: string
           main_equipment: string
+          main_equipment_name: string | null
           maintenance_history: string | null
           manufacturer: string | null
           model: string | null
@@ -41,6 +42,7 @@ export type Database = {
           factory_serial?: string | null
           id?: string
           main_equipment: string
+          main_equipment_name?: string | null
           maintenance_history?: string | null
           manufacturer?: string | null
           model?: string | null
@@ -61,6 +63,7 @@ export type Database = {
           factory_serial?: string | null
           id?: string
           main_equipment?: string
+          main_equipment_name?: string | null
           maintenance_history?: string | null
           manufacturer?: string | null
           model?: string | null
