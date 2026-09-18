@@ -1,0 +1,1 @@
+ALTER TABLE public.equipment ADD COLUMN IF NOT EXISTS main_equipment_name TEXT;
