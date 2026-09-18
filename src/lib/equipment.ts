@@ -19,7 +19,12 @@ export type Equipment = {
   updated_at: string;
 };
 
-export const UNITS = ["A", "B", "C", "D"] as const;
+export const UNITS = [
+  { code: "ASU", label: "ASU — БТАХ" },
+  { code: "MNU", label: "MNU — УТХ" },
+  { code: "RSL", label: "RSL — РШШЛ" },
+  { code: "GTR", label: "GTR — УТАТАХ" },
+] as const;
 
 export const SECTIONS = [
   { code: "KSI", label: "KSI — Өөрөө нунтаглах" },
@@ -133,6 +138,10 @@ export function sectionLabel(code: string) {
   return SECTIONS.find((section) => section.code === code)?.label ?? code;
 }
 
+export function unitLabel(code: string) {
+  return UNITS.find((unit) => unit.code === code)?.label ?? code;
+}
+
 export function subSectionLabel(section: string, code: string) {
   return SUB_SECTIONS[section]?.find((subSection) => subSection.code === code)?.label ?? code;
 }
@@ -207,7 +216,7 @@ export function toCsv(rows: Equipment[]) {
   const lines = rows.map((r) =>
     [
       r.tag_name,
-      r.unit,
+      unitLabel(r.unit),
       sectionLabel(r.section),
       subSectionLabel(r.section, r.sub_section),
       r.main_equipment,
