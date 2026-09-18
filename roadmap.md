@@ -8,3 +8,4 @@
 - [x] CSV export
 - [x] Dashboard stats
 - [x] Section-specific subsection names and Tag codes
+- [x] Service units: ASU (БТАХ), MNU (УТХ), RSL (РШШЛ), GTR (УТАТАХ)

@@ -205,8 +205,8 @@ function Index() {
             </div>
             <FilterSelect value={unit} onChange={setUnit} placeholder="Бүх эрхлэгч">
               {UNITS.map((u) => (
-                <SelectItem key={u} value={u}>
-                  {u}
+                <SelectItem key={u.code} value={u.code}>
+                  {u.label}
                 </SelectItem>
               ))}
             </FilterSelect>

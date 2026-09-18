@@ -23,6 +23,7 @@ import {
   statusLabel,
   subSectionLabel,
   subtypeLabel,
+  unitLabel,
 } from "@/lib/equipment";
 
 export function EquipmentDetail({
@@ -73,7 +74,7 @@ export function EquipmentDetail({
                   <Row label="Төлөв">
                     <Badge variant="secondary">{statusLabel(item.status)}</Badge>
                   </Row>
-                  <Row label="Үйлчилгээ эрхлэгч">{item.unit}</Row>
+                  <Row label="Үйлчилгээ эрхлэгч">{unitLabel(item.unit)}</Row>
                   <Row label="Үндсэн хэсэг">{sectionLabel(item.section)}</Row>
                   <Row label="Дэд хэсэг">{subSectionLabel(item.section, item.sub_section)}</Row>
                   <Row label="Үндсэн тоног төхөөрөмж">{item.main_equipment}</Row>

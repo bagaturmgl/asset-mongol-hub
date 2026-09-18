@@ -44,7 +44,7 @@ type FormState = {
 };
 
 const emptyForm: FormState = {
-  unit: "A",
+  unit: "ASU",
   section: "KSI",
   sub_section: "S1",
   main_equipment: "M1",
@@ -93,6 +93,12 @@ export function EquipmentForm({
     }
   }, [editing]);
 
+  const configuredUnits = UNITS.map((u) => ({ code: u.code, label: u.label }));
+  const unitOptions = configuredUnits.some((item) => item.code === form.unit)
+    ? configuredUnits
+    : form.unit
+      ? [{ code: form.unit, label: form.unit }, ...configuredUnits]
+      : configuredUnits;
   const subtypeOptions = SUBTYPES[form.category] ?? [];
   const configuredSubSections = SUB_SECTIONS[form.section] ?? [];
   const subSectionOptions = configuredSubSections.some((item) => item.code === form.sub_section)
@@ -155,10 +161,10 @@ export function EquipmentForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Field label="Үйлчилгээ эрхлэгч">
-          <Picker value={form.unit} onChange={(v) => set("unit", v)}>
-            {UNITS.map((u) => (
-              <SelectItem key={u} value={u}>
-                {u}
+          <Picker value={form.unit} onChange={(v) => v && set("unit", v)}>
+            {unitOptions.map((u) => (
+              <SelectItem key={u.code} value={u.code}>
+                {u.label}
               </SelectItem>
             ))}
           </Picker>
