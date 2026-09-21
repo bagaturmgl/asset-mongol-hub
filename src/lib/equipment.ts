@@ -223,6 +223,7 @@ export function toCsv(rows: Equipment[]) {
       sectionLabel(r.section),
       subSectionLabel(r.section, r.sub_section),
       r.main_equipment,
+      r.main_equipment_name,
       r.category,
       r.subtype,
       r.sequence,
