@@ -30,6 +30,7 @@ type FormState = {
   section: string;
   sub_section: string;
   main_equipment: string;
+  main_equipment_name: string;
   category: string;
   subtype: string;
   sequence: string;
