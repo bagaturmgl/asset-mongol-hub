@@ -18,7 +18,6 @@ import {
   buildTag,
   CATEGORIES,
   Equipment,
-  MAIN_EQUIPMENTS,
   SECTIONS,
   STATUSES,
   SUBTYPES,
@@ -31,6 +30,7 @@ type FormState = {
   section: string;
   sub_section: string;
   main_equipment: string;
+  main_equipment_name: string;
   category: string;
   subtype: string;
   sequence: string;
@@ -47,7 +47,8 @@ const emptyForm: FormState = {
   unit: "ASU",
   section: "KSI",
   sub_section: "S1",
-  main_equipment: "M1",
+  main_equipment: "",
+  main_equipment_name: "",
   category: "S",
   subtype: "P",
   sequence: "001",
@@ -77,6 +78,7 @@ export function EquipmentForm({
         section: editing.section,
         sub_section: editing.sub_section,
         main_equipment: editing.main_equipment,
+        main_equipment_name: editing.main_equipment_name ?? "",
         category: editing.category,
         subtype: editing.subtype,
         sequence: editing.sequence,
@@ -131,6 +133,8 @@ export function EquipmentForm({
     const payload = {
       ...form,
       sequence: form.sequence.trim().padStart(3, "0"),
+      main_equipment: form.main_equipment.trim().toUpperCase(),
+      main_equipment_name: form.main_equipment_name.trim() || null,
       tag_name: tag,
       manufacturer: form.manufacturer.trim() || null,
       model: form.model.trim() || null,
@@ -190,14 +194,20 @@ export function EquipmentForm({
           </Picker>
         </Field>
 
-        <Field label="Үндсэн тоног төхөөрөмж">
-          <Picker value={form.main_equipment} onChange={(v) => set("main_equipment", v)}>
-            {MAIN_EQUIPMENTS.map((m) => (
-              <SelectItem key={m} value={m}>
-                {m}
-              </SelectItem>
-            ))}
-          </Picker>
+        <Field label="Үндсэн тоног төхөөрөмж (код)">
+          <Input
+            value={form.main_equipment}
+            placeholder="CRU1"
+            onChange={(e) => set("main_equipment", e.target.value.toUpperCase())}
+          />
+        </Field>
+
+        <Field label="Тоног төхөөрөмжийн нэр">
+          <Input
+            value={form.main_equipment_name}
+            placeholder="Crusher #1"
+            onChange={(e) => set("main_equipment_name", e.target.value)}
+          />
         </Field>
 
         <Field label="Үндсэн ангилал">

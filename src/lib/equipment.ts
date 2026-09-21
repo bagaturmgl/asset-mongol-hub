@@ -4,6 +4,7 @@ export type Equipment = {
   section: string;
   sub_section: string;
   main_equipment: string;
+  main_equipment_name: string | null;
   category: string;
   subtype: string;
   sequence: string;
@@ -56,6 +57,7 @@ export const SUB_SECTIONS: Record<string, { code: string; label: string }[]> = {
     { code: "NMS", label: "Шинэ Молибден" },
     { code: "OMS", label: "Хуучин Молибден" },
     { code: "ML", label: "Нунтаглах цикл" },
+    { code: "ACS", label: "Агаарын компрессорын станц" },
   ],
   DTO: [
     { code: "KKD1", label: "Том бутлуур-1" },
@@ -200,6 +202,7 @@ export function toCsv(rows: Equipment[]) {
     "Үндсэн хэсэг",
     "Дэд хэсэг",
     "Үндсэн тоног төхөөрөмж",
+    "Тоног төхөөрөмжийн нэр",
     "Ангилал",
     "Дэд ангилал",
     "Дараалал",
@@ -220,6 +223,7 @@ export function toCsv(rows: Equipment[]) {
       sectionLabel(r.section),
       subSectionLabel(r.section, r.sub_section),
       r.main_equipment,
+      r.main_equipment_name,
       r.category,
       r.subtype,
       r.sequence,

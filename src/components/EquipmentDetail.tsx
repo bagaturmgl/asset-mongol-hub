@@ -77,7 +77,11 @@ export function EquipmentDetail({
                   <Row label="Үйлчилгээ эрхлэгч">{unitLabel(item.unit)}</Row>
                   <Row label="Үндсэн хэсэг">{sectionLabel(item.section)}</Row>
                   <Row label="Дэд хэсэг">{subSectionLabel(item.section, item.sub_section)}</Row>
-                  <Row label="Үндсэн тоног төхөөрөмж">{item.main_equipment}</Row>
+                  <Row label="Үндсэн тоног төхөөрөмж">
+                    {item.main_equipment_name
+                      ? `${item.main_equipment_name} (${item.main_equipment})`
+                      : item.main_equipment}
+                  </Row>
                   <Row label="Үндсэн ангилал">{categoryLabel(item.category)}</Row>
                   <Row label="Дэд ангилал">{subtypeLabel(item.category, item.subtype)}</Row>
                   <Row label="Дарааллын дугаар">{item.sequence}</Row>

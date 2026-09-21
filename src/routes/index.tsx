@@ -120,7 +120,15 @@ function Index() {
       if (section !== ALL && item.section !== section) return false;
       if (category !== ALL && item.category !== category) return false;
       if (!q) return true;
-      return [item.tag_name, item.factory_serial, item.model, item.manufacturer, item.notes]
+      return [
+        item.tag_name,
+        item.factory_serial,
+        item.model,
+        item.manufacturer,
+        item.main_equipment,
+        item.main_equipment_name,
+        item.notes,
+      ]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(q));
     });
@@ -279,7 +287,12 @@ function Index() {
                     <TableCell className="font-mono text-xs font-medium">{item.tag_name}</TableCell>
                     <TableCell>{item.unit}</TableCell>
                     <TableCell>
-                      {sectionLabel(item.section)} / {subSectionLabel(item.section, item.sub_section)} / {item.main_equipment}
+                      <span className="block text-sm">
+                        {sectionLabel(item.section)} / {subSectionLabel(item.section, item.sub_section)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {item.main_equipment_name || item.main_equipment}
+                      </span>
                     </TableCell>
                     <TableCell className="font-mono">
                       {item.category}
