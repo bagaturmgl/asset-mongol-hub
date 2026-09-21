@@ -18,7 +18,6 @@ import {
   buildTag,
   CATEGORIES,
   Equipment,
-  MAIN_EQUIPMENTS,
   SECTIONS,
   STATUSES,
   SUBTYPES,
