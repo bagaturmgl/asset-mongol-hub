@@ -78,6 +78,7 @@ export function EquipmentForm({
         section: editing.section,
         sub_section: editing.sub_section,
         main_equipment: editing.main_equipment,
+        main_equipment_name: editing.main_equipment_name ?? "",
         category: editing.category,
         subtype: editing.subtype,
         sequence: editing.sequence,
