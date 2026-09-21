@@ -75,12 +75,19 @@ function Index() {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["equipment"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("equipment")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as Equipment[];
+      const PAGE = 1000;
+      const all: Equipment[] = [];
+      for (let from = 0; ; from += PAGE) {
+        const { data, error } = await supabase
+          .from("equipment")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        all.push(...((data ?? []) as Equipment[]));
+        if (!data || data.length < PAGE) break;
+      }
+      return all;
     },
   });
 
