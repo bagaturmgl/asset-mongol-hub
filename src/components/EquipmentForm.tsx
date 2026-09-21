@@ -194,14 +194,20 @@ export function EquipmentForm({
           </Picker>
         </Field>
 
-        <Field label="Үндсэн тоног төхөөрөмж">
-          <Picker value={form.main_equipment} onChange={(v) => set("main_equipment", v)}>
-            {MAIN_EQUIPMENTS.map((m) => (
-              <SelectItem key={m} value={m}>
-                {m}
-              </SelectItem>
-            ))}
-          </Picker>
+        <Field label="Үндсэн тоног төхөөрөмж (код)">
+          <Input
+            value={form.main_equipment}
+            placeholder="CRU1"
+            onChange={(e) => set("main_equipment", e.target.value.toUpperCase())}
+          />
+        </Field>
+
+        <Field label="Тоног төхөөрөмжийн нэр">
+          <Input
+            value={form.main_equipment_name}
+            placeholder="Crusher #1"
+            onChange={(e) => set("main_equipment_name", e.target.value)}
+          />
         </Field>
 
         <Field label="Үндсэн ангилал">
