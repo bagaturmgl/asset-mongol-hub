@@ -120,7 +120,15 @@ function Index() {
       if (section !== ALL && item.section !== section) return false;
       if (category !== ALL && item.category !== category) return false;
       if (!q) return true;
-      return [item.tag_name, item.factory_serial, item.model, item.manufacturer, item.notes]
+      return [
+        item.tag_name,
+        item.factory_serial,
+        item.model,
+        item.manufacturer,
+        item.main_equipment,
+        item.main_equipment_name,
+        item.notes,
+      ]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(q));
     });
