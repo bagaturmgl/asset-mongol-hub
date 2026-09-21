@@ -133,6 +133,8 @@ export function EquipmentForm({
     const payload = {
       ...form,
       sequence: form.sequence.trim().padStart(3, "0"),
+      main_equipment: form.main_equipment.trim().toUpperCase(),
+      main_equipment_name: form.main_equipment_name.trim() || null,
       tag_name: tag,
       manufacturer: form.manufacturer.trim() || null,
       model: form.model.trim() || null,
