@@ -57,6 +57,7 @@ export const SUB_SECTIONS: Record<string, { code: string; label: string }[]> = {
     { code: "NMS", label: "Шинэ Молибден" },
     { code: "OMS", label: "Хуучин Молибден" },
     { code: "ML", label: "Нунтаглах цикл" },
+    { code: "ACS", label: "Агаарын компрессорын станц" },
   ],
   DTO: [
     { code: "KKD1", label: "Том бутлуур-1" },
