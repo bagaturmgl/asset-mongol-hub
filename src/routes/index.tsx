@@ -287,7 +287,12 @@ function Index() {
                     <TableCell className="font-mono text-xs font-medium">{item.tag_name}</TableCell>
                     <TableCell>{item.unit}</TableCell>
                     <TableCell>
-                      {sectionLabel(item.section)} / {subSectionLabel(item.section, item.sub_section)} / {item.main_equipment}
+                      <span className="block text-sm">
+                        {sectionLabel(item.section)} / {subSectionLabel(item.section, item.sub_section)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {item.main_equipment_name || item.main_equipment}
+                      </span>
                     </TableCell>
                     <TableCell className="font-mono">
                       {item.category}
