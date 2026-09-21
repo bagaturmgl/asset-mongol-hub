@@ -4,6 +4,7 @@ export type Equipment = {
   section: string;
   sub_section: string;
   main_equipment: string;
+  main_equipment_name: string | null;
   category: string;
   subtype: string;
   sequence: string;
