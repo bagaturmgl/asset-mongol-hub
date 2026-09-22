@@ -72,9 +72,15 @@ export function EquipmentForm({
 }) {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [manualEquipment, setManualEquipment] = useState(false);
 
   useEffect(() => {
     if (editing) {
+      setManualEquipment(
+        !mainEquipmentOptions(editing.section, editing.sub_section).some(
+          (item) => item.code === editing.main_equipment,
+        ),
+      );
       setForm({
         unit: editing.unit,
         section: editing.section,
@@ -93,9 +99,16 @@ export function EquipmentForm({
         maintenance_history: editing.maintenance_history ?? "",
       });
     } else {
-      setForm(emptyForm);
+      setManualEquipment(false);
+      const first = mainEquipmentOptions(emptyForm.section, emptyForm.sub_section)[0];
+      setForm({
+        ...emptyForm,
+        main_equipment: first?.code ?? "",
+        main_equipment_name: first?.label ?? "",
+      });
     }
   }, [editing]);
+
 
   const configuredUnits = UNITS.map((u) => ({ code: u.code, label: u.label }));
   const unitOptions = configuredUnits.some((item) => item.code === form.unit)
