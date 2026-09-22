@@ -239,7 +239,7 @@ export function EquipmentForm({
         </Field>
 
         <Field label="Дэд хэсэг">
-          <Picker value={form.sub_section} onChange={(v) => v && set("sub_section", v)}>
+          <Picker value={form.sub_section} onChange={(v) => v && onSubSectionChange(v)}>
             {subSectionOptions.map((s) => (
               <SelectItem key={s.code} value={s.code}>
                 {s.label}
@@ -248,21 +248,48 @@ export function EquipmentForm({
           </Picker>
         </Field>
 
-        <Field label="Үндсэн тоног төхөөрөмж (код)">
-          <Input
-            value={form.main_equipment}
-            placeholder="CRU1"
-            onChange={(e) => set("main_equipment", e.target.value.toUpperCase())}
-          />
+        <Field label="Үндсэн тоног төхөөрөмж">
+          <Picker
+            value={
+              manualEquipment || (!equipmentInList && form.main_equipment)
+                ? CUSTOM_EQUIPMENT
+                : form.main_equipment
+            }
+            onChange={(v) => v && pickEquipment(v)}
+          >
+            {equipmentList.map((m) => (
+              <SelectItem key={m.code} value={m.code}>
+                {m.label} ({m.code})
+              </SelectItem>
+            ))}
+            <SelectItem value={CUSTOM_EQUIPMENT}>Бусад (гараар бичих)</SelectItem>
+          </Picker>
         </Field>
 
-        <Field label="Тоног төхөөрөмжийн нэр">
-          <Input
-            value={form.main_equipment_name}
-            placeholder="Crusher #1"
-            onChange={(e) => set("main_equipment_name", e.target.value)}
-          />
-        </Field>
+        {manualEquipment || (!equipmentInList && form.main_equipment) ? (
+          <>
+            <Field label="Тоног төхөөрөмжийн код">
+              <Input
+                value={form.main_equipment}
+                placeholder="CRU1"
+                onChange={(e) => set("main_equipment", e.target.value.toUpperCase())}
+              />
+            </Field>
+
+            <Field label="Тоног төхөөрөмжийн нэр">
+              <Input
+                value={form.main_equipment_name}
+                placeholder="Crusher #1"
+                onChange={(e) => set("main_equipment_name", e.target.value)}
+              />
+            </Field>
+          </>
+        ) : (
+          <Field label="Тоног төхөөрөмжийн код">
+            <Input value={form.main_equipment} readOnly className="bg-muted/50 font-mono" />
+          </Field>
+        )}
+
 
         <Field label="Үндсэн ангилал">
           <Picker value={form.category} onChange={onCategoryChange}>
