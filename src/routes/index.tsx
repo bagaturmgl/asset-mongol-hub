@@ -82,6 +82,7 @@ function Index() {
           .from("equipment")
           .select("*")
           .order("created_at", { ascending: false })
+          .order("tag_name", { ascending: true })
           .range(from, from + PAGE - 1);
         if (error) throw error;
         all.push(...((data ?? []) as Equipment[]));

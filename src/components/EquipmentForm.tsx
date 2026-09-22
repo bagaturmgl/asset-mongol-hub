@@ -24,6 +24,8 @@ import {
   SUB_SECTIONS,
   UNITS,
 } from "@/lib/equipment";
+import { mainEquipmentOptions } from "@/lib/main-equipments";
+
 
 type FormState = {
   unit: string;
@@ -42,6 +44,8 @@ type FormState = {
   notes: string;
   maintenance_history: string;
 };
+
+const CUSTOM_EQUIPMENT = "__custom__";
 
 const emptyForm: FormState = {
   unit: "ASU",
@@ -70,9 +74,15 @@ export function EquipmentForm({
 }) {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [manualEquipment, setManualEquipment] = useState(false);
 
   useEffect(() => {
     if (editing) {
+      setManualEquipment(
+        !mainEquipmentOptions(editing.section, editing.sub_section).some(
+          (item) => item.code === editing.main_equipment,
+        ),
+      );
       setForm({
         unit: editing.unit,
         section: editing.section,
@@ -91,9 +101,16 @@ export function EquipmentForm({
         maintenance_history: editing.maintenance_history ?? "",
       });
     } else {
-      setForm(emptyForm);
+      setManualEquipment(false);
+      const first = mainEquipmentOptions(emptyForm.section, emptyForm.sub_section)[0];
+      setForm({
+        ...emptyForm,
+        main_equipment: first?.code ?? "",
+        main_equipment_name: first?.label ?? "",
+      });
     }
   }, [editing]);
+
 
   const configuredUnits = UNITS.map((u) => ({ code: u.code, label: u.label }));
   const unitOptions = configuredUnits.some((item) => item.code === form.unit)
@@ -108,6 +125,8 @@ export function EquipmentForm({
     : form.sub_section
       ? [{ code: form.sub_section, label: form.sub_section }, ...configuredSubSections]
       : configuredSubSections;
+  const equipmentList = mainEquipmentOptions(form.section, form.sub_section);
+  const equipmentInList = equipmentList.some((item) => item.code === form.main_equipment);
   const tag = useMemo(() => buildTag(form), [form]);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
@@ -118,10 +137,47 @@ export function EquipmentForm({
     setForm((prev) => ({ ...prev, category, subtype: first }));
   };
 
+  const pickEquipment = (code: string) => {
+    if (code === CUSTOM_EQUIPMENT) {
+      setManualEquipment(true);
+      setForm((prev) => ({ ...prev, main_equipment: "", main_equipment_name: "" }));
+      return;
+    }
+    const found = mainEquipmentOptions(form.section, form.sub_section).find(
+      (item) => item.code === code,
+    );
+    setManualEquipment(false);
+    setForm((prev) => ({
+      ...prev,
+      main_equipment: code,
+      main_equipment_name: found?.label ?? "",
+    }));
+  };
+
   const onSectionChange = (section: string) => {
     const first = SUB_SECTIONS[section]?.[0]?.code ?? "0";
-    setForm((prev) => ({ ...prev, section, sub_section: first }));
+    const firstEquipment = mainEquipmentOptions(section, first)[0];
+    setManualEquipment(false);
+    setForm((prev) => ({
+      ...prev,
+      section,
+      sub_section: first,
+      main_equipment: firstEquipment?.code ?? "",
+      main_equipment_name: firstEquipment?.label ?? "",
+    }));
   };
+
+  const onSubSectionChange = (subSection: string) => {
+    const firstEquipment = mainEquipmentOptions(form.section, subSection)[0];
+    setManualEquipment(false);
+    setForm((prev) => ({
+      ...prev,
+      sub_section: subSection,
+      main_equipment: firstEquipment?.code ?? "",
+      main_equipment_name: firstEquipment?.label ?? "",
+    }));
+  };
+
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -185,7 +241,7 @@ export function EquipmentForm({
         </Field>
 
         <Field label="Дэд хэсэг">
-          <Picker value={form.sub_section} onChange={(v) => v && set("sub_section", v)}>
+          <Picker value={form.sub_section} onChange={(v) => v && onSubSectionChange(v)}>
             {subSectionOptions.map((s) => (
               <SelectItem key={s.code} value={s.code}>
                 {s.label}
@@ -194,21 +250,48 @@ export function EquipmentForm({
           </Picker>
         </Field>
 
-        <Field label="Үндсэн тоног төхөөрөмж (код)">
-          <Input
-            value={form.main_equipment}
-            placeholder="CRU1"
-            onChange={(e) => set("main_equipment", e.target.value.toUpperCase())}
-          />
+        <Field label="Үндсэн тоног төхөөрөмж">
+          <Picker
+            value={
+              manualEquipment || (!equipmentInList && form.main_equipment)
+                ? CUSTOM_EQUIPMENT
+                : form.main_equipment
+            }
+            onChange={(v) => v && pickEquipment(v)}
+          >
+            {equipmentList.map((m) => (
+              <SelectItem key={m.code} value={m.code}>
+                {m.label} ({m.code})
+              </SelectItem>
+            ))}
+            <SelectItem value={CUSTOM_EQUIPMENT}>Бусад (гараар бичих)</SelectItem>
+          </Picker>
         </Field>
 
-        <Field label="Тоног төхөөрөмжийн нэр">
-          <Input
-            value={form.main_equipment_name}
-            placeholder="Crusher #1"
-            onChange={(e) => set("main_equipment_name", e.target.value)}
-          />
-        </Field>
+        {manualEquipment || (!equipmentInList && form.main_equipment) ? (
+          <>
+            <Field label="Тоног төхөөрөмжийн код">
+              <Input
+                value={form.main_equipment}
+                placeholder="CRU1"
+                onChange={(e) => set("main_equipment", e.target.value.toUpperCase())}
+              />
+            </Field>
+
+            <Field label="Тоног төхөөрөмжийн нэр">
+              <Input
+                value={form.main_equipment_name}
+                placeholder="Crusher #1"
+                onChange={(e) => set("main_equipment_name", e.target.value)}
+              />
+            </Field>
+          </>
+        ) : (
+          <Field label="Тоног төхөөрөмжийн код">
+            <Input value={form.main_equipment} readOnly className="bg-muted/50 font-mono" />
+          </Field>
+        )}
+
 
         <Field label="Үндсэн ангилал">
           <Picker value={form.category} onChange={onCategoryChange}>
