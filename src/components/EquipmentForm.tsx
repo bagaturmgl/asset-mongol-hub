@@ -45,6 +45,8 @@ type FormState = {
   maintenance_history: string;
 };
 
+const CUSTOM_EQUIPMENT = "__custom__";
+
 const emptyForm: FormState = {
   unit: "ASU",
   section: "KSI",
