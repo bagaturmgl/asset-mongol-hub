@@ -110,6 +110,8 @@ export function EquipmentForm({
     : form.sub_section
       ? [{ code: form.sub_section, label: form.sub_section }, ...configuredSubSections]
       : configuredSubSections;
+  const equipmentList = mainEquipmentOptions(form.section, form.sub_section);
+  const equipmentInList = equipmentList.some((item) => item.code === form.main_equipment);
   const tag = useMemo(() => buildTag(form), [form]);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
@@ -120,10 +122,47 @@ export function EquipmentForm({
     setForm((prev) => ({ ...prev, category, subtype: first }));
   };
 
+  const pickEquipment = (code: string) => {
+    if (code === CUSTOM_EQUIPMENT) {
+      setManualEquipment(true);
+      setForm((prev) => ({ ...prev, main_equipment: "", main_equipment_name: "" }));
+      return;
+    }
+    const found = mainEquipmentOptions(form.section, form.sub_section).find(
+      (item) => item.code === code,
+    );
+    setManualEquipment(false);
+    setForm((prev) => ({
+      ...prev,
+      main_equipment: code,
+      main_equipment_name: found?.label ?? "",
+    }));
+  };
+
   const onSectionChange = (section: string) => {
     const first = SUB_SECTIONS[section]?.[0]?.code ?? "0";
-    setForm((prev) => ({ ...prev, section, sub_section: first }));
+    const firstEquipment = mainEquipmentOptions(section, first)[0];
+    setManualEquipment(false);
+    setForm((prev) => ({
+      ...prev,
+      section,
+      sub_section: first,
+      main_equipment: firstEquipment?.code ?? "",
+      main_equipment_name: firstEquipment?.label ?? "",
+    }));
   };
+
+  const onSubSectionChange = (subSection: string) => {
+    const firstEquipment = mainEquipmentOptions(form.section, subSection)[0];
+    setManualEquipment(false);
+    setForm((prev) => ({
+      ...prev,
+      sub_section: subSection,
+      main_equipment: firstEquipment?.code ?? "",
+      main_equipment_name: firstEquipment?.label ?? "",
+    }));
+  };
+
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
