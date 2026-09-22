@@ -24,6 +24,8 @@ import {
   SUB_SECTIONS,
   UNITS,
 } from "@/lib/equipment";
+import { mainEquipmentOptions } from "@/lib/main-equipments";
+
 
 type FormState = {
   unit: string;
