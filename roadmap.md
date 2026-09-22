@@ -9,3 +9,4 @@
 - [x] Dashboard stats
 - [x] Section-specific subsection names and Tag codes
 - [x] Service units: ASU (БТАХ), MNU (УТХ), RSL (РШШЛ), GTR (УТАТАХ)
+- [x] Separate registration and inventory views with header navigation

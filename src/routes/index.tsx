@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Download, Factory, Loader2, Search, X } from "lucide-react";
+import { ClipboardPlus, Download, Factory, List, Loader2, Search, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { EquipmentDetail } from "@/components/EquipmentDetail";
@@ -62,9 +62,11 @@ export const Route = createFileRoute("/")({
 });
 
 const ALL = "__all__";
+type ViewMode = "register" | "inventory";
 
 function Index() {
   const queryClient = useQueryClient();
+  const [view, setView] = useState<ViewMode>("inventory");
   const [search, setSearch] = useState("");
   const [unit, setUnit] = useState(ALL);
   const [section, setSection] = useState(ALL);
@@ -159,54 +161,81 @@ function Index() {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-6">
-          <div className="flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Factory className="size-5" />
-            </span>
-            <div>
-              <h1 className="text-lg font-semibold tracking-tight">
-                ХХХА Тоног төхөөрөмж бүртгэл
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                Tag name генератор ба нэгдсэн бүртгэлийн сан
-              </p>
+          <div className="flex min-w-0 flex-wrap items-center gap-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Factory className="size-5" />
+              </span>
+              <div className="min-w-0">
+                <h1 className="text-lg font-semibold tracking-tight">
+                  ХХХА Тоног төхөөрөмж бүртгэл
+                </h1>
+                <p className="text-xs text-muted-foreground">
+                  Tag name генератор ба нэгдсэн бүртгэлийн сан
+                </p>
+              </div>
             </div>
+            <nav className="flex items-center gap-1 rounded-lg border bg-muted/40 p-1" aria-label="Үндсэн цэс">
+              <Button
+                type="button"
+                size="sm"
+                variant={view === "register" ? "default" : "ghost"}
+                onClick={() => setView("register")}
+              >
+                <ClipboardPlus className="size-4" /> Бүртгэл хийх
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={view === "inventory" ? "default" : "ghost"}
+                onClick={() => setView("inventory")}
+              >
+                <List className="size-4" /> Бүртгэлийн жагсаалт
+              </Button>
+            </nav>
           </div>
-          <Button variant="outline" onClick={exportCsv} disabled={!filtered.length}>
-            <Download className="size-4" /> CSV / Excel экспорт
-          </Button>
+          {view === "inventory" && (
+            <Button variant="outline" onClick={exportCsv} disabled={!filtered.length}>
+              <Download className="size-4" /> CSV / Excel экспорт
+            </Button>
+          )}
         </div>
       </header>
 
       <main className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6">
-        <StatsCards items={items} />
-
-        <section className="rounded-xl border bg-card p-5 shadow-sm sm:p-6">
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h2 className="text-base font-semibold tracking-tight">
-                {editing ? "Бүртгэл засварлах" : "Шинэ тоног төхөөрөмж бүртгэх"}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Сонголт хийх үед Tag name автоматаар шинэчлэгдэнэ.
-              </p>
+        {view === "register" && (
+          <section className="rounded-xl border bg-card p-5 shadow-sm sm:p-6">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="text-base font-semibold tracking-tight">
+                  {editing ? "Бүртгэл засварлах" : "Шинэ тоног төхөөрөмж бүртгэх"}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Сонголт хийх үед Tag name автоматаар шинэчлэгдэнэ.
+                </p>
+              </div>
+              {editing && (
+                <Badge variant="secondary" className="font-mono">
+                  {editing.tag_name}
+                </Badge>
+              )}
             </div>
-            {editing && (
-              <Badge variant="secondary" className="font-mono">
-                {editing.tag_name}
-              </Badge>
-            )}
-          </div>
-          <EquipmentForm
-            editing={editing}
-            onDone={() => {
-              setEditing(null);
-              void queryClient.invalidateQueries({ queryKey: ["equipment"] });
-            }}
-          />
-        </section>
+            <EquipmentForm
+              editing={editing}
+              onDone={() => {
+                const wasEditing = Boolean(editing);
+                setEditing(null);
+                void queryClient.invalidateQueries({ queryKey: ["equipment"] });
+                if (wasEditing) setView("inventory");
+              }}
+            />
+          </section>
+        )}
 
-        <section className="rounded-xl border bg-card shadow-sm">
+        {view === "inventory" && (
+          <>
+            <StatsCards items={items} />
+            <section className="rounded-xl border bg-card shadow-sm">
           <div className="flex flex-wrap items-end gap-3 border-b p-5 sm:p-6">
             <div className="min-w-56 flex-1">
               <div className="relative">
@@ -331,7 +360,9 @@ function Index() {
           <div className="border-t px-5 py-3 text-xs text-muted-foreground sm:px-6">
             Нийт {items.length} бүртгэлээс {filtered.length} харагдаж байна.
           </div>
-        </section>
+            </section>
+          </>
+        )}
       </main>
 
       <EquipmentDetail
@@ -340,6 +371,7 @@ function Index() {
         onEdit={(item) => {
           setEditing(item);
           setSelected(null);
+          setView("register");
           window.scrollTo({ top: 0, behavior: "smooth" });
         }}
         onDelete={(item) => removeItem.mutate(item.id)}
