@@ -16,9 +16,11 @@ export type Database = {
     Tables: {
       equipment: {
         Row: {
+          asset_serial: string | null
           category: string
           created_at: string
           factory_serial: string | null
+          function_code: string | null
           id: string
           main_equipment: string
           main_equipment_name: string | null
@@ -26,6 +28,7 @@ export type Database = {
           manufacturer: string | null
           model: string | null
           notes: string | null
+          parameter: string | null
           section: string
           sequence: string
           status: string
@@ -37,9 +40,11 @@ export type Database = {
           year: string
         }
         Insert: {
+          asset_serial?: string | null
           category: string
           created_at?: string
           factory_serial?: string | null
+          function_code?: string | null
           id?: string
           main_equipment: string
           main_equipment_name?: string | null
@@ -47,6 +52,7 @@ export type Database = {
           manufacturer?: string | null
           model?: string | null
           notes?: string | null
+          parameter?: string | null
           section: string
           sequence: string
           status?: string
@@ -58,9 +64,11 @@ export type Database = {
           year: string
         }
         Update: {
+          asset_serial?: string | null
           category?: string
           created_at?: string
           factory_serial?: string | null
+          function_code?: string | null
           id?: string
           main_equipment?: string
           main_equipment_name?: string | null
@@ -68,6 +76,7 @@ export type Database = {
           manufacturer?: string | null
           model?: string | null
           notes?: string | null
+          parameter?: string | null
           section?: string
           sequence?: string
           status?: string
