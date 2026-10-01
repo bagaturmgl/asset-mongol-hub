@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+const PAGE_SIZE = 50;
+const LIST_STATE_KEY = "equipment-list-state";
 import { ClipboardPlus, Download, Factory, List, Loader2, Search, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -66,11 +69,52 @@ type ViewMode = "register" | "inventory";
 
 function Index() {
   const queryClient = useQueryClient();
-  const [view, setView] = useState<ViewMode>("inventory");
-  const [search, setSearch] = useState("");
-  const [unit, setUnit] = useState(ALL);
-  const [section, setSection] = useState(ALL);
-  const [category, setCategory] = useState(ALL);
+  const [view, setViewRaw] = useState<ViewMode>("inventory");
+  const [search, setSearchRaw] = useState("");
+  const [unit, setUnitRaw] = useState(ALL);
+  const [section, setSectionRaw] = useState(ALL);
+  const [category, setCategoryRaw] = useState(ALL);
+  const [page, setPage] = useState(1);
+  const [restored, setRestored] = useState(false);
+  const scrollRef = useRef(0);
+
+  const setSearch = (v: string) => { setSearchRaw(v); setPage(1); };
+  const setUnit = (v: string) => { setUnitRaw(v); setPage(1); };
+  const setSection = (v: string) => { setSectionRaw(v); setPage(1); };
+  const setCategory = (v: string) => { setCategoryRaw(v); setPage(1); };
+
+  function setView(next: ViewMode) {
+    if (next === "register" && view === "inventory") scrollRef.current = window.scrollY;
+    setViewRaw(next);
+    if (next === "inventory") {
+      requestAnimationFrame(() => window.scrollTo({ top: scrollRef.current }));
+    }
+  }
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(LIST_STATE_KEY);
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (typeof s.search === "string") setSearchRaw(s.search);
+        if (typeof s.unit === "string") setUnitRaw(s.unit);
+        if (typeof s.section === "string") setSectionRaw(s.section);
+        if (typeof s.category === "string") setCategoryRaw(s.category);
+        if (typeof s.page === "number") setPage(s.page);
+      }
+    } catch {
+      /* ignore */
+    }
+    setRestored(true);
+  }, []);
+
+  useEffect(() => {
+    if (!restored) return;
+    sessionStorage.setItem(
+      LIST_STATE_KEY,
+      JSON.stringify({ search, unit, section, category, page }),
+    );
+  }, [restored, search, unit, section, category, page]);
   const [selected, setSelected] = useState<Equipment | null>(null);
   const [editing, setEditing] = useState<Equipment | null>(null);
 
@@ -143,6 +187,10 @@ function Index() {
         .some((value) => String(value).toLowerCase().includes(q));
     });
   }, [items, search, unit, section, category]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageItems = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const hasFilters = search || unit !== ALL || section !== ALL || category !== ALL;
 
@@ -315,7 +363,7 @@ function Index() {
                     </TableCell>
                   </TableRow>
                 )}
-                {filtered.map((item) => (
+                {pageItems.map((item) => (
                   <TableRow
                     key={item.id}
                     onClick={() => setSelected(item)}
@@ -357,8 +405,31 @@ function Index() {
               </TableBody>
             </Table>
           </div>
-          <div className="border-t px-5 py-3 text-xs text-muted-foreground sm:px-6">
-            Нийт {items.length} бүртгэлээс {filtered.length} харагдаж байна.
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t px-5 py-3 text-xs text-muted-foreground sm:px-6">
+            <span>
+              Нийт {items.length} бүртгэлээс {filtered.length} илэрц
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={safePage <= 1}
+                onClick={() => setPage(safePage - 1)}
+              >
+                Өмнөх
+              </Button>
+              <span>
+                {safePage} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={safePage >= totalPages}
+                onClick={() => setPage(safePage + 1)}
+              >
+                Дараах
+              </Button>
+            </div>
           </div>
             </section>
           </>
