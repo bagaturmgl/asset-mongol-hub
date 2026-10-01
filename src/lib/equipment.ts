@@ -7,6 +7,9 @@ export type Equipment = {
   main_equipment_name: string | null;
   category: string;
   subtype: string;
+  parameter: string | null;
+  function_code: string | null;
+  asset_serial: string | null;
   sequence: string;
   year: string;
   tag_name: string;
