@@ -9,9 +9,9 @@ export function StatsCards({ items }: { items: Equipment[] }) {
 
   const cards = [
     { label: "Бүртгэлтэй нийт", value: items.length, icon: Cpu, hint: "тоног төхөөрөмж" },
-    { label: "Сенсор (S)", value: count("S"), icon: Gauge, hint: "даралт, температур, түвшин" },
-    { label: "Хувиргагч (C)", value: count("C"), icon: Sliders, hint: "гүйдэл, чадал, жин" },
-    { label: "Actuator (A)", value: count("A"), icon: Activity, hint: "клапан, соленоид" },
+    { label: "Мэдрэгч", value: count("S"), icon: Gauge, hint: "TE, PE, ZS…" },
+    { label: "Хувиргагч", value: count("C"), icon: Sliders, hint: "PT, PIT, LIT…" },
+    { label: "Гүйцэтгэгч", value: count("A"), icon: Activity, hint: "XV, CV…" },
     { label: "Шинэ бүртгэл", value: recent, icon: CalendarClock, hint: "сүүлийн 7 хоног" },
   ];
 

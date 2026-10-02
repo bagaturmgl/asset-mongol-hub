@@ -169,24 +169,32 @@ function Index() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const sectionHit = SECTIONS.find(
+      (s) => q && (s.code.toLowerCase() === q || s.label.toLowerCase().split("—")[1]?.trim().includes(q)),
+    );
     return items.filter((item) => {
       if (unit !== ALL && item.unit !== unit) return false;
       if (section !== ALL && item.section !== section) return false;
       if (category !== ALL && item.category !== category) return false;
+      if (parameter !== ALL && item.parameter !== parameter) return false;
       if (!q) return true;
+      if (sectionHit) return item.section === sectionHit.code;
       return [
         item.tag_name,
+        item.asset_serial,
         item.factory_serial,
         item.model,
         item.manufacturer,
         item.main_equipment,
         item.main_equipment_name,
+        isaCode(item),
+        parameterLabel(item.parameter),
         item.notes,
       ]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(q));
     });
-  }, [items, search, unit, section, category]);
+  }, [items, search, unit, section, category, parameter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
