@@ -79,51 +79,73 @@ export const SUB_SECTIONS: Record<string, { code: string; label: string }[]> = {
 };
 export const MAIN_EQUIPMENTS = ["M1", "M2", "M3", "M4", "M5"] as const;
 
+/** Ерөнхий бүлэг — функцээс автоматаар тодорхойлогдоно */
 export const CATEGORIES = [
-  { code: "S", label: "S — Сенсор" },
-  { code: "C", label: "C — Хувиргагч" },
-  { code: "A", label: "A — Хөдөлгүүр / Actuator" },
+  { code: "S", label: "Мэдрэгч (E, S)" },
+  { code: "C", label: "Хувиргагч (T, IT, I)" },
+  { code: "A", label: "Гүйцэтгэгч (V)" },
 ] as const;
 
-export const SUBTYPES: Record<string, { code: string; label: string }[]> = {
-  S: [
-    { code: "P", label: "P — Даралт" },
-    { code: "T", label: "T — Температур" },
-    { code: "L", label: "L — Түвшин" },
-    { code: "F", label: "F — Зарцуулалт" },
-    { code: "H", label: "H — Чийгшил" },
-    { code: "W", label: "W — Жин" },
-    { code: "S", label: "S — Хурд" },
-    { code: "V", label: "V — Чичиргээ" },
-    { code: "O", label: "O — pH" },
-    { code: "B", label: "B — Байршил мэдрэгч" },
-  ],
-  C: [
-    { code: "C", label: "C — Гүйдлийн" },
-    { code: "W", label: "W — Чадлын" },
-    { code: "G", label: "G — Жингийн" },
-    { code: "S", label: "S — Чадал" },
-    { code: "I", label: "I — Гүйдэл / Заагч" },
-    { code: "M", label: "M — Метал" },
-    { code: "O", label: "O — pH" },
-    { code: "A", label: "A — Ca%" },
-    { code: "T", label: "T — Температур" },
-    { code: "P", label: "P — Даралт" },
-    { code: "E", label: "E — Жин" },
-    { code: "V", label: "V — Чичиргээ" },
-    { code: "F", label: "F — Зарцуулалт" },
-    { code: "L", label: "L — Түвшин" },
-  ],
-  A: [
-    { code: "V", label: "V — Клапан" },
-    { code: "S", label: "S — Соленоид" },
-    { code: "H", label: "H — Гидравлик цилиндр" },
-    { code: "L", label: "L — Хаалт" },
-    { code: "U", label: "U — Гүйцэтгэгч" },
-    { code: "B", label: "B — Байршил заагч" },
-    { code: "D", label: "D — Тугнагч" },
-  ],
+/** ISA-5.1 параметр — эхний үсэг */
+export const PARAMETERS = [
+  { code: "P", label: "P — Даралт" },
+  { code: "T", label: "T — Температур" },
+  { code: "L", label: "L — Түвшин" },
+  { code: "F", label: "F — Зарцуулалт" },
+  { code: "W", label: "W — Жин" },
+  { code: "V", label: "V — Чичиргээ" },
+  { code: "S", label: "S — Хурд" },
+  { code: "A", label: "A — Шинжилгээ / pH / Метал" },
+  { code: "Z", label: "Z — Байрлал / Төгсгөл" },
+  { code: "M", label: "M — Чийгшил" },
+  { code: "I", label: "I — Гүйдэл" },
+  { code: "J", label: "J — Чадал" },
+  { code: "X", label: "X — Бусад / Ерөнхий" },
+] as const;
+
+/** ISA-5.1 функц — дараагийн үсэг */
+export const FUNCTIONS = [
+  { code: "IT", label: "IT — Дэлгэцтэй хувиргагч" },
+  { code: "T", label: "T — Хувиргагч" },
+  { code: "E", label: "E — Мэдрэгч элемент" },
+  { code: "I", label: "I — Заагч / Манометр" },
+  { code: "S", label: "S — Унтраалга / Реле" },
+  { code: "V", label: "V — Клапан / Гүйцэтгэгч" },
+  { code: "Y", label: "Y — Позиционер / Хөрвүүлэгч" },
+] as const;
+
+export function groupOfFunction(fn: string): "S" | "C" | "A" {
+  if (fn === "E" || fn === "S") return "S";
+  if (fn === "V") return "A";
+  return "C";
+}
+
+export function parameterLabel(code: string | null) {
+  return PARAMETERS.find((p) => p.code === code)?.label ?? code ?? "—";
+}
+
+export function functionLabel(code: string | null) {
+  return FUNCTIONS.find((f) => f.code === code)?.label ?? code ?? "—";
+}
+
+export const SECTION_SERIAL_PREFIX: Record<string, string> = {
+  KSI: "1",
+  IFO: "2",
+  DTO: "3",
+  FSO: "4",
+  RO: "5",
+  PNS: "6",
 };
+
+export function nextAssetSerial(section: string, existing: (string | null)[]) {
+  const prefix = SECTION_SERIAL_PREFIX[section] ?? "0";
+  let max = 0;
+  for (const s of existing) {
+    const m = s?.match(/^(\d)-(\d{5})$/);
+    if (m && m[1] === prefix) max = Math.max(max, Number(m[2]));
+  }
+  return `${prefix}-${String(max + 1).padStart(5, "0")}`;
+}
 
 export const STATUSES = [
   { code: "active", label: "Ажиллаж байна" },
@@ -151,9 +173,6 @@ export function subSectionLabel(section: string, code: string) {
   return SUB_SECTIONS[section]?.find((subSection) => subSection.code === code)?.label ?? code;
 }
 
-export function subtypeLabel(category: string, code: string) {
-  return SUBTYPES[category]?.find((s) => s.code === code)?.label ?? code;
-}
 
 export type MaintenanceEntry = { date: string; note: string };
 
@@ -189,30 +208,37 @@ export function buildTag(v: {
   section: string;
   sub_section: string;
   main_equipment: string;
-  category: string;
-  subtype: string;
+  parameter: string;
+  function_code: string;
   sequence: string;
   year: string;
 }) {
   const seq = (v.sequence || "").padStart(3, "0");
-  return `${v.unit}-${v.section}-${v.sub_section}-${v.main_equipment}-${v.category}${v.subtype}${seq}-${v.year}`;
+  return `${v.unit}-${v.section}-${v.sub_section}-${v.main_equipment}-${v.parameter}${v.function_code}${seq}-${v.year}`;
+}
+
+export function isaCode(r: Pick<Equipment, "parameter" | "function_code" | "category" | "subtype">) {
+  return r.parameter && r.function_code ? `${r.parameter}${r.function_code}` : `${r.category}${r.subtype}`;
 }
 
 export function toCsv(rows: Equipment[]) {
   const headers = [
     "Tag name",
+    "Хөрөнгийн сериал",
     "Үйлчилгээ эрхлэгч",
     "Үндсэн хэсэг",
     "Дэд хэсэг",
     "Үндсэн тоног төхөөрөмж",
     "Тоног төхөөрөмжийн нэр",
-    "Ангилал",
-    "Дэд ангилал",
+    "ISA код",
+    "Параметр",
+    "Функц",
+    "Ерөнхий бүлэг",
     "Дараалал",
     "Үйлдвэрлэсэн он",
     "Үйлдвэрлэгч",
     "Модель",
-    "Сериал №",
+    "Үйлдвэрийн сериал №",
     "Төлөв",
     "Ашиглалтын явцын түүх",
     "Засвар үйлчилгээний түүх",
@@ -222,13 +248,16 @@ export function toCsv(rows: Equipment[]) {
   const lines = rows.map((r) =>
     [
       r.tag_name,
+      r.asset_serial,
       unitLabel(r.unit),
       sectionLabel(r.section),
       subSectionLabel(r.section, r.sub_section),
       r.main_equipment,
       r.main_equipment_name,
-      r.category,
-      r.subtype,
+      isaCode(r),
+      parameterLabel(r.parameter),
+      functionLabel(r.function_code),
+      categoryLabel(r.category),
       r.sequence,
       r.year,
       r.manufacturer,

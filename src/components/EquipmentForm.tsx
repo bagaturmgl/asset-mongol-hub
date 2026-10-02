@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Copy, Loader2, RotateCcw, Save } from "lucide-react";
+import { AlertTriangle, Copy, Loader2, Plus, RotateCcw, Save, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -15,17 +15,20 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  appendMaintenance,
   buildTag,
-  CATEGORIES,
+  categoryLabel,
   Equipment,
+  FUNCTIONS,
+  groupOfFunction,
+  nextAssetSerial,
+  PARAMETERS,
   SECTIONS,
   STATUSES,
-  SUBTYPES,
   SUB_SECTIONS,
   UNITS,
 } from "@/lib/equipment";
 import { mainEquipmentOptions } from "@/lib/main-equipments";
-
 
 type FormState = {
   unit: string;
@@ -33,10 +36,11 @@ type FormState = {
   sub_section: string;
   main_equipment: string;
   main_equipment_name: string;
-  category: string;
-  subtype: string;
+  parameter: string;
+  function_code: string;
   sequence: string;
   year: string;
+  asset_serial: string;
   manufacturer: string;
   model: string;
   factory_serial: string;
@@ -53,10 +57,11 @@ const emptyForm: FormState = {
   sub_section: "S1",
   main_equipment: "",
   main_equipment_name: "",
-  category: "S",
-  subtype: "P",
+  parameter: "P",
+  function_code: "IT",
   sequence: "001",
   year: String(new Date().getFullYear()),
+  asset_serial: "",
   manufacturer: "",
   model: "",
   factory_serial: "",
@@ -67,16 +72,22 @@ const emptyForm: FormState = {
 
 export function EquipmentForm({
   editing,
+  items,
   onDone,
 }: {
   editing?: Equipment | null;
+  items: Equipment[];
   onDone?: () => void;
 }) {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [manualEquipment, setManualEquipment] = useState(false);
+  const [seqTouched, setSeqTouched] = useState(false);
+  const [serialTouched, setSerialTouched] = useState(false);
 
   useEffect(() => {
+    setSeqTouched(Boolean(editing));
+    setSerialTouched(Boolean(editing));
     if (editing) {
       setManualEquipment(
         !mainEquipmentOptions(editing.section, editing.sub_section).some(
@@ -89,10 +100,11 @@ export function EquipmentForm({
         sub_section: editing.sub_section,
         main_equipment: editing.main_equipment,
         main_equipment_name: editing.main_equipment_name ?? "",
-        category: editing.category,
-        subtype: editing.subtype,
+        parameter: editing.parameter ?? editing.subtype,
+        function_code: editing.function_code ?? "T",
         sequence: editing.sequence,
         year: editing.year,
+        asset_serial: editing.asset_serial ?? "",
         manufacturer: editing.manufacturer ?? "",
         model: editing.model ?? "",
         factory_serial: editing.factory_serial ?? "",
@@ -111,6 +123,64 @@ export function EquipmentForm({
     }
   }, [editing]);
 
+  // Same-slot records (excluding the one being edited)
+  const siblings = useMemo(
+    () =>
+      items.filter(
+        (i) =>
+          i.id !== editing?.id &&
+          i.unit === form.unit &&
+          i.section === form.section &&
+          i.sub_section === form.sub_section &&
+          i.main_equipment === form.main_equipment &&
+          i.parameter === form.parameter &&
+          i.function_code === form.function_code,
+      ),
+    [items, editing, form.unit, form.section, form.sub_section, form.main_equipment, form.parameter, form.function_code],
+  );
+  const suggestedSeq = useMemo(() => {
+    const used = new Set(siblings.map((s) => Number(s.sequence)));
+    let n = 1;
+    while (used.has(n)) n++;
+    return String(n).padStart(3, "0");
+  }, [siblings]);
+  const seqConflict = siblings.some((s) => Number(s.sequence) === Number(form.sequence || 0));
+
+  const suggestedSerial = useMemo(
+    () => nextAssetSerial(form.section, items.map((i) => i.asset_serial)),
+    [items, form.section],
+  );
+  const serialConflict =
+    !!form.asset_serial &&
+    items.some((i) => i.id !== editing?.id && i.asset_serial === form.asset_serial.trim());
+
+  useEffect(() => {
+    if (!seqTouched) setForm((p) => (p.sequence === suggestedSeq ? p : { ...p, sequence: suggestedSeq }));
+  }, [suggestedSeq, seqTouched]);
+  useEffect(() => {
+    if (!serialTouched)
+      setForm((p) => (p.asset_serial === suggestedSerial ? p : { ...p, asset_serial: suggestedSerial }));
+  }, [suggestedSerial, serialTouched]);
+
+  // Vendor / model suggestions — never alter parameter/function
+  const manufacturers = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const i of items) {
+      const v = i.manufacturer?.trim();
+      if (v && !map.has(v.toLowerCase())) map.set(v.toLowerCase(), v);
+    }
+    return [...map.values()].sort((a, b) => a.localeCompare(b));
+  }, [items]);
+  const models = useMemo(() => {
+    const mf = form.manufacturer.trim().toLowerCase();
+    const set = new Set<string>();
+    for (const i of items) {
+      if (mf && i.manufacturer?.trim().toLowerCase() !== mf) continue;
+      const v = i.model?.trim();
+      if (v) set.add(v);
+    }
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [items, form.manufacturer]);
 
   const configuredUnits = UNITS.map((u) => ({ code: u.code, label: u.label }));
   const unitOptions = configuredUnits.some((item) => item.code === form.unit)
@@ -118,7 +188,6 @@ export function EquipmentForm({
     : form.unit
       ? [{ code: form.unit, label: form.unit }, ...configuredUnits]
       : configuredUnits;
-  const subtypeOptions = SUBTYPES[form.category] ?? [];
   const configuredSubSections = SUB_SECTIONS[form.section] ?? [];
   const subSectionOptions = configuredSubSections.some((item) => item.code === form.sub_section)
     ? configuredSubSections
@@ -128,14 +197,10 @@ export function EquipmentForm({
   const equipmentList = mainEquipmentOptions(form.section, form.sub_section);
   const equipmentInList = equipmentList.some((item) => item.code === form.main_equipment);
   const tag = useMemo(() => buildTag(form), [form]);
+  const group = groupOfFunction(form.function_code);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
-
-  const onCategoryChange = (category: string) => {
-    const first = SUBTYPES[category]?.[0]?.code ?? "";
-    setForm((prev) => ({ ...prev, category, subtype: first }));
-  };
 
   const pickEquipment = (code: string) => {
     if (code === CUSTOM_EQUIPMENT) {
@@ -143,15 +208,9 @@ export function EquipmentForm({
       setForm((prev) => ({ ...prev, main_equipment: "", main_equipment_name: "" }));
       return;
     }
-    const found = mainEquipmentOptions(form.section, form.sub_section).find(
-      (item) => item.code === code,
-    );
+    const found = equipmentList.find((item) => item.code === code);
     setManualEquipment(false);
-    setForm((prev) => ({
-      ...prev,
-      main_equipment: code,
-      main_equipment_name: found?.label ?? "",
-    }));
+    setForm((prev) => ({ ...prev, main_equipment: code, main_equipment_name: found?.label ?? "" }));
   };
 
   const onSectionChange = (section: string) => {
@@ -178,6 +237,22 @@ export function EquipmentForm({
     }));
   };
 
+  function reset() {
+    setSeqTouched(false);
+    setSerialTouched(false);
+    const first = mainEquipmentOptions(form.section, form.sub_section)[0];
+    setForm({
+      ...emptyForm,
+      unit: form.unit,
+      section: form.section,
+      sub_section: form.sub_section,
+      main_equipment: form.main_equipment || first?.code || "",
+      main_equipment_name: form.main_equipment_name || first?.label || "",
+      parameter: form.parameter,
+      function_code: form.function_code,
+      year: form.year,
+    });
+  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -185,13 +260,24 @@ export function EquipmentForm({
       toast.error("Дарааллын дугаар болон 4 оронтой оныг зөв бөглөнө үү.");
       return;
     }
+    if (seqConflict) {
+      toast.error("Энэ дарааллын дугаар аль хэдийн бүртгэлтэй байна.");
+      return;
+    }
+    if (serialConflict) {
+      toast.error("Энэ хөрөнгийн сериал аль хэдийн бүртгэлтэй байна.");
+      return;
+    }
     setSaving(true);
     const payload = {
       ...form,
+      category: group,
+      subtype: form.parameter,
       sequence: form.sequence.trim().padStart(3, "0"),
       main_equipment: form.main_equipment.trim().toUpperCase(),
       main_equipment_name: form.main_equipment_name.trim() || null,
       tag_name: tag,
+      asset_serial: form.asset_serial.trim() || null,
       manufacturer: form.manufacturer.trim() || null,
       model: form.model.trim() || null,
       factory_serial: form.factory_serial.trim() || null,
@@ -213,77 +299,52 @@ export function EquipmentForm({
       return;
     }
     toast.success(editing ? "Тоног төхөөрөмж шинэчлэгдлээ." : `${tag} бүртгэгдлээ.`);
-    if (!editing) setForm({ ...emptyForm, year: form.year, unit: form.unit, section: form.section });
+    if (!editing) reset();
     onDone?.();
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <Step n={1} title="Байршил">
         <Field label="Үйлчилгээ эрхлэгч">
           <Picker value={form.unit} onChange={(v) => v && set("unit", v)}>
             {unitOptions.map((u) => (
-              <SelectItem key={u.code} value={u.code}>
-                {u.label}
-              </SelectItem>
+              <SelectItem key={u.code} value={u.code}>{u.label}</SelectItem>
             ))}
           </Picker>
         </Field>
-
         <Field label="Үндсэн хэсэг">
           <Picker value={form.section} onChange={onSectionChange}>
             {SECTIONS.map((s) => (
-              <SelectItem key={s.code} value={s.code}>
-                {s.label}
-              </SelectItem>
+              <SelectItem key={s.code} value={s.code}>{s.label}</SelectItem>
             ))}
           </Picker>
         </Field>
-
         <Field label="Дэд хэсэг">
           <Picker value={form.sub_section} onChange={(v) => v && onSubSectionChange(v)}>
             {subSectionOptions.map((s) => (
-              <SelectItem key={s.code} value={s.code}>
-                {s.label}
-              </SelectItem>
+              <SelectItem key={s.code} value={s.code}>{s.label}</SelectItem>
             ))}
           </Picker>
         </Field>
-
         <Field label="Үндсэн тоног төхөөрөмж">
           <Picker
-            value={
-              manualEquipment || (!equipmentInList && form.main_equipment)
-                ? CUSTOM_EQUIPMENT
-                : form.main_equipment
-            }
+            value={manualEquipment || (!equipmentInList && form.main_equipment) ? CUSTOM_EQUIPMENT : form.main_equipment}
             onChange={(v) => v && pickEquipment(v)}
           >
             {equipmentList.map((m) => (
-              <SelectItem key={m.code} value={m.code}>
-                {m.label} ({m.code})
-              </SelectItem>
+              <SelectItem key={m.code} value={m.code}>{m.label} ({m.code})</SelectItem>
             ))}
             <SelectItem value={CUSTOM_EQUIPMENT}>Бусад (гараар бичих)</SelectItem>
           </Picker>
         </Field>
-
         {manualEquipment || (!equipmentInList && form.main_equipment) ? (
           <>
             <Field label="Тоног төхөөрөмжийн код">
-              <Input
-                value={form.main_equipment}
-                placeholder="CRU1"
-                onChange={(e) => set("main_equipment", e.target.value.toUpperCase())}
-              />
+              <Input value={form.main_equipment} placeholder="CRU1" onChange={(e) => set("main_equipment", e.target.value.toUpperCase())} />
             </Field>
-
             <Field label="Тоног төхөөрөмжийн нэр">
-              <Input
-                value={form.main_equipment_name}
-                placeholder="Crusher #1"
-                onChange={(e) => set("main_equipment_name", e.target.value)}
-              />
+              <Input value={form.main_equipment_name} placeholder="Crusher #1" onChange={(e) => set("main_equipment_name", e.target.value)} />
             </Field>
           </>
         ) : (
@@ -291,135 +352,128 @@ export function EquipmentForm({
             <Input value={form.main_equipment} readOnly className="bg-muted/50 font-mono" />
           </Field>
         )}
+      </Step>
 
-
-        <Field label="Үндсэн ангилал">
-          <Picker value={form.category} onChange={onCategoryChange}>
-            {CATEGORIES.map((c) => (
-              <SelectItem key={c.code} value={c.code}>
-                {c.label}
-              </SelectItem>
+      <Step n={2} title="Параметр ба функц (ISA-5.1)">
+        <Field label="Параметр">
+          <Picker value={form.parameter} onChange={(v) => v && set("parameter", v)}>
+            {PARAMETERS.map((p) => (
+              <SelectItem key={p.code} value={p.code}>{p.label}</SelectItem>
             ))}
           </Picker>
         </Field>
-
-        <Field label="Дэд ангилал / Параметр">
-          <Picker value={form.subtype} onChange={(v) => set("subtype", v)}>
-            {subtypeOptions.map((s) => (
-              <SelectItem key={s.code} value={s.code}>
-                {s.label}
-              </SelectItem>
+        <Field label="Функц">
+          <Picker value={form.function_code} onChange={(v) => v && set("function_code", v)}>
+            {FUNCTIONS.map((f) => (
+              <SelectItem key={f.code} value={f.code}>{f.label}</SelectItem>
             ))}
           </Picker>
         </Field>
-
+        <Field label="Ерөнхий бүлэг">
+          <Input value={categoryLabel(group)} readOnly className="bg-muted/50" />
+        </Field>
         <Field label="Дарааллын дугаар">
           <Input
             value={form.sequence}
             inputMode="numeric"
             maxLength={4}
             placeholder="001"
-            onChange={(e) => set("sequence", e.target.value.replace(/\D/g, ""))}
-          />
-        </Field>
-
-        <Field label="Үйлдвэрлэсэн он">
-          <Input
-            value={form.year}
-            inputMode="numeric"
-            maxLength={4}
-            placeholder="2026"
-            onChange={(e) => set("year", e.target.value.replace(/\D/g, ""))}
-          />
-        </Field>
-      </div>
-
-      <div className="rounded-xl border border-primary/25 bg-primary/5 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              Tag name / Сериал дугаар
-            </p>
-            <p className="mt-2 font-mono text-xl font-semibold tracking-tight text-primary sm:text-2xl">
-              {tag}
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              void navigator.clipboard?.writeText(tag);
-              toast.success("Tag name хуулагдлаа.");
+            className={seqConflict ? "border-destructive" : ""}
+            onChange={(e) => {
+              setSeqTouched(true);
+              set("sequence", e.target.value.replace(/\D/g, ""));
             }}
-          >
-            <Copy className="size-4" /> Хуулах
-          </Button>
-        </div>
-        <p className="mt-3 text-xs text-muted-foreground">
-          Формат: {"{Unit}"}-{"{Section}"}-{"{SubSection}"}-{"{MainEquip}"}-{"{Category}"}
-          {"{Subtype}"}
-          {"{Seq}"}-{"{Year}"}
-        </p>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Field label="Үйлдвэрлэгч">
-          <Input
-            value={form.manufacturer}
-            placeholder="Endress+Hauser"
-            onChange={(e) => set("manufacturer", e.target.value)}
           />
+          {seqConflict ? (
+            <Hint warn>Давхардаж байна. Санал: {suggestedSeq}</Hint>
+          ) : (
+            form.sequence !== suggestedSeq && (
+              <button type="button" className="text-xs text-primary underline" onClick={() => { setSeqTouched(false); set("sequence", suggestedSeq); }}>
+                Санал болгох: {suggestedSeq}
+              </button>
+            )
+          )}
+        </Field>
+      </Step>
+
+      <Step n={3} title="Үйлдвэрлэгч ба загвар">
+        <Field label="Үйлдвэрлэгч">
+          <Input value={form.manufacturer} list="mf-list" placeholder="Endress+Hauser" onChange={(e) => set("manufacturer", e.target.value)} />
+          <datalist id="mf-list">
+            {manufacturers.map((m) => <option key={m} value={m} />)}
+          </datalist>
         </Field>
         <Field label="Модель">
-          <Input
-            value={form.model}
-            placeholder="Cerabar PMP71"
-            onChange={(e) => set("model", e.target.value)}
-          />
+          <Input value={form.model} list="model-list" placeholder="Cerabar PMC51" onChange={(e) => set("model", e.target.value)} />
+          <datalist id="model-list">
+            {models.slice(0, 200).map((m) => <option key={m} value={m} />)}
+          </datalist>
         </Field>
-        <Field label="Үйлдвэрийн Сериал №">
+        <Field label="Үйлдвэрийн сериал №">
+          <Input value={form.factory_serial} placeholder="EH-77120451" onChange={(e) => set("factory_serial", e.target.value)} />
+        </Field>
+        <Field label="Үйлдвэрлэсэн он">
+          <Input value={form.year} inputMode="numeric" maxLength={4} placeholder="2026" onChange={(e) => set("year", e.target.value.replace(/\D/g, ""))} />
+        </Field>
+        <Field label="Хөрөнгийн сериал (байнгын)">
           <Input
-            value={form.factory_serial}
-            placeholder="EH-77120451"
-            onChange={(e) => set("factory_serial", e.target.value)}
+            value={form.asset_serial}
+            placeholder="1-00001"
+            className={`font-mono ${serialConflict ? "border-destructive" : ""}`}
+            onChange={(e) => { setSerialTouched(true); set("asset_serial", e.target.value); }}
           />
+          {serialConflict ? (
+            <Hint warn>Давхардаж байна. Санал: {suggestedSerial}</Hint>
+          ) : editing ? (
+            <Hint>Шилжсэн ч сериал өөрчлөгдөхгүй.</Hint>
+          ) : null}
         </Field>
         <Field label="Төлөв">
           <Picker value={form.status} onChange={(v) => set("status", v)}>
             {STATUSES.map((s) => (
-              <SelectItem key={s.code} value={s.code}>
-                {s.label}
-              </SelectItem>
+              <SelectItem key={s.code} value={s.code}>{s.label}</SelectItem>
             ))}
           </Picker>
         </Field>
+      </Step>
+
+      <div className="rounded-xl border border-primary/25 bg-primary/5 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Tag name</p>
+            <p className="mt-2 font-mono text-xl font-semibold tracking-tight text-primary sm:text-2xl">{tag}</p>
+            <p className="mt-1 font-mono text-xs text-muted-foreground">Хөрөнгийн сериал: {form.asset_serial || "—"}</p>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={() => { void navigator.clipboard?.writeText(tag); toast.success("Tag name хуулагдлаа."); }}>
+            <Copy className="size-4" /> Хуулах
+          </Button>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Формат: {"{Эрхлэгч}-{Хэсэг}-{ДэдХэсэг}-{Төхөөрөмж}-{Параметр}{Функц}{Дараалал}-{Он}"}
+        </p>
       </div>
 
-      <Field label="Ашиглалтын явцын түүх">
-        <Textarea
+      <div className="grid gap-4 lg:grid-cols-2">
+        <HistoryEditor
+          label="Ашиглалтын явцын түүх"
+          placeholder="Суурилуулсан / шилжүүлсэн / буулгасан"
           value={form.notes}
-          rows={3}
-          placeholder="Ашиглалтын явцад гарсан өөрчлөлт, тэмдэглэл"
-          onChange={(e) => set("notes", e.target.value)}
+          onChange={(v) => set("notes", v)}
         />
-      </Field>
-
-      <Field label="Засвар үйлчилгээний түүх">
-        <Textarea
+        <HistoryEditor
+          label="Засвар үйлчилгээний түүх"
+          placeholder="Битүүмж солих, калибровка"
           value={form.maintenance_history}
-          rows={4}
-          placeholder={"2026-03-12 — Битүүмж солих\n2026-06-20 — Калибровка хийх"}
-          onChange={(e) => set("maintenance_history", e.target.value)}
+          onChange={(v) => set("maintenance_history", v)}
         />
-      </Field>
+      </div>
 
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={saving}>
           {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
           {editing ? "Шинэчлэх" : "Бүртгэх"}
         </Button>
-        <Button type="button" variant="ghost" onClick={() => (editing ? onDone?.() : setForm(emptyForm))}>
+        <Button type="button" variant="ghost" onClick={() => (editing ? onDone?.() : reset())}>
           <RotateCcw className="size-4" /> {editing ? "Болих" : "Цэвэрлэх"}
         </Button>
       </div>
@@ -427,31 +481,74 @@ export function EquipmentForm({
   );
 }
 
+function HistoryEditor({
+  label,
+  placeholder,
+  value,
+  onChange,
+}: {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [note, setNote] = useState("");
+  return (
+    <Field label={label}>
+      <div className="flex gap-2">
+        <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-40 shrink-0" />
+        <Input value={note} placeholder={placeholder} onChange={(e) => setNote(e.target.value)} />
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon"
+          disabled={!date || !note.trim()}
+          onClick={() => { onChange(appendMaintenance(value, date, note)); setNote(""); }}
+          aria-label="Нэмэх"
+        >
+          <Plus className="size-4" />
+        </Button>
+      </div>
+      <Textarea value={value} rows={4} placeholder="YYYY-MM-DD — тэмдэглэл" className="font-mono text-xs" onChange={(e) => onChange(e.target.value)} />
+    </Field>
+  );
+}
+
+function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
+  return (
+    <fieldset className="space-y-3">
+      <legend className="flex items-center gap-2 text-sm font-semibold">
+        <span className="flex size-6 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">{n}</span>
+        {title}
+      </legend>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{children}</div>
+    </fieldset>
+  );
+}
+
+function Hint({ children, warn }: { children: React.ReactNode; warn?: boolean }) {
+  return (
+    <p className={`flex items-center gap-1 text-xs ${warn ? "text-destructive" : "text-muted-foreground"}`}>
+      {warn ? <AlertTriangle className="size-3" /> : <Sparkles className="size-3" />}
+      {children}
+    </p>
+  );
+}
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {label}
-      </Label>
+      <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</Label>
       {children}
     </div>
   );
 }
 
-function Picker({
-  value,
-  onChange,
-  children,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  children: React.ReactNode;
-}) {
+function Picker({ value, onChange, children }: { value: string; onChange: (value: string) => void; children: React.ReactNode }) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-full">
-        <SelectValue />
-      </SelectTrigger>
+      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
       <SelectContent>{children}</SelectContent>
     </Select>
   );
