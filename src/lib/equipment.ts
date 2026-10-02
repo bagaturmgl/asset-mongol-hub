@@ -79,51 +79,73 @@ export const SUB_SECTIONS: Record<string, { code: string; label: string }[]> = {
 };
 export const MAIN_EQUIPMENTS = ["M1", "M2", "M3", "M4", "M5"] as const;
 
+/** Ерөнхий бүлэг — функцээс автоматаар тодорхойлогдоно */
 export const CATEGORIES = [
-  { code: "S", label: "S — Сенсор" },
-  { code: "C", label: "C — Хувиргагч" },
-  { code: "A", label: "A — Хөдөлгүүр / Actuator" },
+  { code: "S", label: "Мэдрэгч (E, S)" },
+  { code: "C", label: "Хувиргагч (T, IT, I)" },
+  { code: "A", label: "Гүйцэтгэгч (V)" },
 ] as const;
 
-export const SUBTYPES: Record<string, { code: string; label: string }[]> = {
-  S: [
-    { code: "P", label: "P — Даралт" },
-    { code: "T", label: "T — Температур" },
-    { code: "L", label: "L — Түвшин" },
-    { code: "F", label: "F — Зарцуулалт" },
-    { code: "H", label: "H — Чийгшил" },
-    { code: "W", label: "W — Жин" },
-    { code: "S", label: "S — Хурд" },
-    { code: "V", label: "V — Чичиргээ" },
-    { code: "O", label: "O — pH" },
-    { code: "B", label: "B — Байршил мэдрэгч" },
-  ],
-  C: [
-    { code: "C", label: "C — Гүйдлийн" },
-    { code: "W", label: "W — Чадлын" },
-    { code: "G", label: "G — Жингийн" },
-    { code: "S", label: "S — Чадал" },
-    { code: "I", label: "I — Гүйдэл / Заагч" },
-    { code: "M", label: "M — Метал" },
-    { code: "O", label: "O — pH" },
-    { code: "A", label: "A — Ca%" },
-    { code: "T", label: "T — Температур" },
-    { code: "P", label: "P — Даралт" },
-    { code: "E", label: "E — Жин" },
-    { code: "V", label: "V — Чичиргээ" },
-    { code: "F", label: "F — Зарцуулалт" },
-    { code: "L", label: "L — Түвшин" },
-  ],
-  A: [
-    { code: "V", label: "V — Клапан" },
-    { code: "S", label: "S — Соленоид" },
-    { code: "H", label: "H — Гидравлик цилиндр" },
-    { code: "L", label: "L — Хаалт" },
-    { code: "U", label: "U — Гүйцэтгэгч" },
-    { code: "B", label: "B — Байршил заагч" },
-    { code: "D", label: "D — Тугнагч" },
-  ],
+/** ISA-5.1 параметр — эхний үсэг */
+export const PARAMETERS = [
+  { code: "P", label: "P — Даралт" },
+  { code: "T", label: "T — Температур" },
+  { code: "L", label: "L — Түвшин" },
+  { code: "F", label: "F — Зарцуулалт" },
+  { code: "W", label: "W — Жин" },
+  { code: "V", label: "V — Чичиргээ" },
+  { code: "S", label: "S — Хурд" },
+  { code: "A", label: "A — Шинжилгээ / pH / Метал" },
+  { code: "Z", label: "Z — Байрлал / Төгсгөл" },
+  { code: "M", label: "M — Чийгшил" },
+  { code: "I", label: "I — Гүйдэл" },
+  { code: "J", label: "J — Чадал" },
+  { code: "X", label: "X — Бусад / Ерөнхий" },
+] as const;
+
+/** ISA-5.1 функц — дараагийн үсэг */
+export const FUNCTIONS = [
+  { code: "IT", label: "IT — Дэлгэцтэй хувиргагч" },
+  { code: "T", label: "T — Хувиргагч" },
+  { code: "E", label: "E — Мэдрэгч элемент" },
+  { code: "I", label: "I — Заагч / Манометр" },
+  { code: "S", label: "S — Унтраалга / Реле" },
+  { code: "V", label: "V — Клапан / Гүйцэтгэгч" },
+  { code: "Y", label: "Y — Позиционер / Хөрвүүлэгч" },
+] as const;
+
+export function groupOfFunction(fn: string): "S" | "C" | "A" {
+  if (fn === "E" || fn === "S") return "S";
+  if (fn === "V") return "A";
+  return "C";
+}
+
+export function parameterLabel(code: string | null) {
+  return PARAMETERS.find((p) => p.code === code)?.label ?? code ?? "—";
+}
+
+export function functionLabel(code: string | null) {
+  return FUNCTIONS.find((f) => f.code === code)?.label ?? code ?? "—";
+}
+
+export const SECTION_SERIAL_PREFIX: Record<string, string> = {
+  KSI: "1",
+  IFO: "2",
+  DTO: "3",
+  FSO: "4",
+  RO: "5",
+  PNS: "6",
 };
+
+export function nextAssetSerial(section: string, existing: (string | null)[]) {
+  const prefix = SECTION_SERIAL_PREFIX[section] ?? "0";
+  let max = 0;
+  for (const s of existing) {
+    const m = s?.match(/^(\d)-(\d{5})$/);
+    if (m && m[1] === prefix) max = Math.max(max, Number(m[2]));
+  }
+  return `${prefix}-${String(max + 1).padStart(5, "0")}`;
+}
 
 export const STATUSES = [
   { code: "active", label: "Ажиллаж байна" },
