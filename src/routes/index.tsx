@@ -33,6 +33,9 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   CATEGORIES,
   Equipment,
+  PARAMETERS,
+  isaCode,
+  parameterLabel,
   SECTIONS,
   UNITS,
   appendMaintenance,
@@ -74,6 +77,7 @@ function Index() {
   const [unit, setUnitRaw] = useState(ALL);
   const [section, setSectionRaw] = useState(ALL);
   const [category, setCategoryRaw] = useState(ALL);
+  const [parameter, setParameterRaw] = useState(ALL);
   const [page, setPage] = useState(1);
   const [restored, setRestored] = useState(false);
   const scrollRef = useRef(0);
@@ -82,6 +86,7 @@ function Index() {
   const setUnit = (v: string) => { setUnitRaw(v); setPage(1); };
   const setSection = (v: string) => { setSectionRaw(v); setPage(1); };
   const setCategory = (v: string) => { setCategoryRaw(v); setPage(1); };
+  const setParameter = (v: string) => { setParameterRaw(v); setPage(1); };
 
   function setView(next: ViewMode) {
     if (next === "register" && view === "inventory") scrollRef.current = window.scrollY;
@@ -100,6 +105,7 @@ function Index() {
         if (typeof s.unit === "string") setUnitRaw(s.unit);
         if (typeof s.section === "string") setSectionRaw(s.section);
         if (typeof s.category === "string") setCategoryRaw(s.category);
+        if (typeof s.parameter === "string") setParameterRaw(s.parameter);
         if (typeof s.page === "number") setPage(s.page);
       }
     } catch {
@@ -112,9 +118,9 @@ function Index() {
     if (!restored) return;
     sessionStorage.setItem(
       LIST_STATE_KEY,
-      JSON.stringify({ search, unit, section, category, page }),
+      JSON.stringify({ search, unit, section, category, parameter, page }),
     );
-  }, [restored, search, unit, section, category, page]);
+  }, [restored, search, unit, section, category, parameter, page]);
   const [selected, setSelected] = useState<Equipment | null>(null);
   const [editing, setEditing] = useState<Equipment | null>(null);
 
@@ -200,7 +206,7 @@ function Index() {
   const safePage = Math.min(page, totalPages);
   const pageItems = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
-  const hasFilters = search || unit !== ALL || section !== ALL || category !== ALL;
+  const hasFilters = search || unit !== ALL || section !== ALL || category !== ALL || parameter !== ALL;
 
   function exportCsv() {
     const blob = new Blob([toCsv(filtered)], { type: "text/csv;charset=utf-8;" });
@@ -278,6 +284,7 @@ function Index() {
             </div>
             <EquipmentForm
               editing={editing}
+              items={items}
               onDone={() => {
                 const wasEditing = Boolean(editing);
                 setEditing(null);
@@ -299,7 +306,7 @@ function Index() {
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Tag name, сериал, модель, үйлдвэрлэгчээр хайх"
+                  placeholder="Tag, сериал, хэсэг, ISA код (PIT), модель, үйлдвэрлэгч"
                   className="pl-9"
                 />
               </div>
@@ -314,14 +321,21 @@ function Index() {
             <FilterSelect value={section} onChange={setSection} placeholder="Бүх хэсэг">
               {SECTIONS.map((s) => (
                 <SelectItem key={s.code} value={s.code}>
-                  {s.code}
+                  {s.label}
                 </SelectItem>
               ))}
             </FilterSelect>
-            <FilterSelect value={category} onChange={setCategory} placeholder="Бүх ангилал">
+            <FilterSelect value={category} onChange={setCategory} placeholder="Бүх бүлэг">
               {CATEGORIES.map((c) => (
                 <SelectItem key={c.code} value={c.code}>
                   {c.label}
+                </SelectItem>
+              ))}
+            </FilterSelect>
+            <FilterSelect value={parameter} onChange={setParameter} placeholder="Бүх параметр">
+              {PARAMETERS.map((p) => (
+                <SelectItem key={p.code} value={p.code}>
+                  {p.label}
                 </SelectItem>
               ))}
             </FilterSelect>
@@ -333,6 +347,7 @@ function Index() {
                   setUnit(ALL);
                   setSection(ALL);
                   setCategory(ALL);
+                  setParameter(ALL);
                 }}
               >
                 <X className="size-4" /> Цэвэрлэх
@@ -347,9 +362,9 @@ function Index() {
                   <TableHead>Tag name</TableHead>
                   <TableHead>Эрхлэгч</TableHead>
                   <TableHead>Хэсэг</TableHead>
-                  <TableHead>Ангилал</TableHead>
+                  <TableHead>ISA код</TableHead>
                   <TableHead>Үйлдвэрлэгч / Модель</TableHead>
-                  <TableHead>Сериал №</TableHead>
+                  <TableHead>Хөрөнгийн сериал</TableHead>
                   <TableHead>Он</TableHead>
                   <TableHead>Төлөв</TableHead>
                   <TableHead>Бүртгэсэн</TableHead>
@@ -388,14 +403,13 @@ function Index() {
                       </span>
                     </TableCell>
                     <TableCell className="font-mono">
-                      {item.category}
-                      {item.subtype}
+                      {isaCode(item)}
                     </TableCell>
                     <TableCell className="text-sm">
                       <span className="block">{item.manufacturer || "—"}</span>
                       <span className="text-xs text-muted-foreground">{item.model || ""}</span>
                     </TableCell>
-                    <TableCell className="text-sm">{item.factory_serial || "—"}</TableCell>
+                    <TableCell className="font-mono text-xs">{item.asset_serial || "—"}</TableCell>
                     <TableCell>{item.year}</TableCell>
                     <TableCell>
                       <Badge variant={item.status === "active" ? "default" : "secondary"}>
