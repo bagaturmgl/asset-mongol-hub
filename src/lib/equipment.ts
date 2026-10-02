@@ -173,9 +173,6 @@ export function subSectionLabel(section: string, code: string) {
   return SUB_SECTIONS[section]?.find((subSection) => subSection.code === code)?.label ?? code;
 }
 
-export function subtypeLabel(category: string, code: string) {
-  return SUBTYPES[category]?.find((s) => s.code === code)?.label ?? code;
-}
 
 export type MaintenanceEntry = { date: string; note: string };
 
@@ -211,30 +208,37 @@ export function buildTag(v: {
   section: string;
   sub_section: string;
   main_equipment: string;
-  category: string;
-  subtype: string;
+  parameter: string;
+  function_code: string;
   sequence: string;
   year: string;
 }) {
   const seq = (v.sequence || "").padStart(3, "0");
-  return `${v.unit}-${v.section}-${v.sub_section}-${v.main_equipment}-${v.category}${v.subtype}${seq}-${v.year}`;
+  return `${v.unit}-${v.section}-${v.sub_section}-${v.main_equipment}-${v.parameter}${v.function_code}${seq}-${v.year}`;
+}
+
+export function isaCode(r: Pick<Equipment, "parameter" | "function_code" | "category" | "subtype">) {
+  return r.parameter && r.function_code ? `${r.parameter}${r.function_code}` : `${r.category}${r.subtype}`;
 }
 
 export function toCsv(rows: Equipment[]) {
   const headers = [
     "Tag name",
+    "Хөрөнгийн сериал",
     "Үйлчилгээ эрхлэгч",
     "Үндсэн хэсэг",
     "Дэд хэсэг",
     "Үндсэн тоног төхөөрөмж",
     "Тоног төхөөрөмжийн нэр",
-    "Ангилал",
-    "Дэд ангилал",
+    "ISA код",
+    "Параметр",
+    "Функц",
+    "Ерөнхий бүлэг",
     "Дараалал",
     "Үйлдвэрлэсэн он",
     "Үйлдвэрлэгч",
     "Модель",
-    "Сериал №",
+    "Үйлдвэрийн сериал №",
     "Төлөв",
     "Ашиглалтын явцын түүх",
     "Засвар үйлчилгээний түүх",
@@ -244,13 +248,16 @@ export function toCsv(rows: Equipment[]) {
   const lines = rows.map((r) =>
     [
       r.tag_name,
+      r.asset_serial,
       unitLabel(r.unit),
       sectionLabel(r.section),
       subSectionLabel(r.section, r.sub_section),
       r.main_equipment,
       r.main_equipment_name,
-      r.category,
-      r.subtype,
+      isaCode(r),
+      parameterLabel(r.parameter),
+      functionLabel(r.function_code),
+      categoryLabel(r.category),
       r.sequence,
       r.year,
       r.manufacturer,
