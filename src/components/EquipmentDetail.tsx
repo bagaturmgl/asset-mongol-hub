@@ -18,11 +18,13 @@ import { Badge } from "@/components/ui/badge";
 import {
   Equipment,
   categoryLabel,
+  functionLabel,
+  isaCode,
+  parameterLabel,
   parseMaintenance,
   sectionLabel,
   statusLabel,
   subSectionLabel,
-  subtypeLabel,
   unitLabel,
 } from "@/lib/equipment";
 
@@ -53,6 +55,7 @@ export function EquipmentDetail({
   }, [addOpen]);
 
   const entries = parseMaintenance(item?.maintenance_history ?? null);
+  const usage = parseMaintenance(item?.notes ?? null);
 
   return (
     <>
@@ -82,15 +85,34 @@ export function EquipmentDetail({
                       ? `${item.main_equipment_name} (${item.main_equipment})`
                       : item.main_equipment}
                   </Row>
-                  <Row label="Үндсэн ангилал">{categoryLabel(item.category)}</Row>
-                  <Row label="Дэд ангилал">{subtypeLabel(item.category, item.subtype)}</Row>
+                  <Row label="ISA код">
+                    <span className="font-mono">{isaCode(item)}</span> · {categoryLabel(item.category)}
+                  </Row>
+                  <Row label="Хөрөнгийн сериал">
+                    <span className="font-mono">{item.asset_serial || "—"}</span>
+                  </Row>
+                  <Row label="Параметр">{parameterLabel(item.parameter)}</Row>
+                  <Row label="Функц">{functionLabel(item.function_code)}</Row>
                   <Row label="Дарааллын дугаар">{item.sequence}</Row>
                   <Row label="Үйлдвэрлэсэн он">{item.year}</Row>
                   <Row label="Үйлдвэрлэгч">{item.manufacturer || "—"}</Row>
                   <Row label="Модель">{item.model || "—"}</Row>
                   <Row label="Үйлдвэрийн сериал №">{item.factory_serial || "—"}</Row>
                   <div className="sm:col-span-2">
-                    <Row label="Ашиглалтын явцын түүх">{item.notes || "—"}</Row>
+                    <Row label="Ашиглалтын явцын түүх">
+                      {usage.length ? (
+                        <ul className="space-y-1 border-l-2 border-primary/30 pl-3">
+                          {usage.map((e, i) => (
+                            <li key={i} className="flex gap-2 text-sm">
+                              <span className="font-mono text-xs text-muted-foreground">{e.date || "—"}</span>
+                              <span>{e.note}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        "—"
+                      )}
+                    </Row>
                   </div>
                   <div className="sm:col-span-2">
                     <Row label="Засвар үйлчилгээний түүх">
