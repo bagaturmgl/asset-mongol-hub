@@ -573,7 +573,7 @@ function Picker({
   disabled?: boolean;
 }) {
   return (
-    <Select value={value || undefined} onValueChange={(v) => { if (v) onChange(v); }} disabled={Boolean(disabled)}>
+    <Select value={value} onValueChange={(v) => { if (v) onChange(v); }} disabled={Boolean(disabled)}>
       <SelectTrigger className="w-full"><SelectValue placeholder="Сонгох..." /></SelectTrigger>
       <SelectContent>{children}</SelectContent>
     </Select>
