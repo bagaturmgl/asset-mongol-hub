@@ -242,7 +242,7 @@ function Index() {
                 type="button"
                 size="sm"
                 variant={view === "register" ? "default" : "ghost"}
-                onClick={() => setView("register")}
+                onClick={() => { setEditing(null); setView("register"); }}
               >
                 <ClipboardPlus className="size-4" /> Бүртгэл хийх
               </Button>

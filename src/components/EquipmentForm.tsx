@@ -51,15 +51,34 @@ type FormState = {
 
 const CUSTOM_EQUIPMENT = "__custom__";
 
+/** Tag name-ээс бүрэлдэхүүнийг задлах (хуучин/дутуу бүртгэлд) */
+function parseTag(tag: string) {
+  const parts = tag.split("-");
+  if (parts.length < 6) return null;
+  const [unit, section, sub_section] = parts;
+  const year = parts[parts.length - 1];
+  const isa = parts[parts.length - 2] ?? "";
+  const main_equipment = parts.slice(3, -2).join("-");
+  const m = isa.match(/^([A-Z])([A-Z]{1,2}?)(\d+)$/);
+  const fnCodes = FUNCTIONS.map((f) => f.code as string);
+  let parameter = m?.[1] ?? "";
+  let function_code = m?.[2] ?? "";
+  if (m && !fnCodes.includes(function_code)) {
+    const rest = isa.replace(/\d+$/, "").slice(1);
+    function_code = fnCodes.includes(rest) ? rest : function_code;
+  }
+  return { unit, section, sub_section, main_equipment, parameter, function_code, sequence: m?.[3] ?? "", year };
+}
+
 const emptyForm: FormState = {
-  unit: "ASU",
-  section: "KSI",
-  sub_section: "S1",
+  unit: "",
+  section: "",
+  sub_section: "",
   main_equipment: "",
   main_equipment_name: "",
-  parameter: "P",
-  function_code: "IT",
-  sequence: "001",
+  parameter: "",
+  function_code: "",
+  sequence: "",
   year: String(new Date().getFullYear()),
   asset_serial: "",
   manufacturer: "",
@@ -89,21 +108,22 @@ export function EquipmentForm({
     setSeqTouched(Boolean(editing));
     setSerialTouched(Boolean(editing));
     if (editing) {
-      setManualEquipment(
-        !mainEquipmentOptions(editing.section, editing.sub_section).some(
-          (item) => item.code === editing.main_equipment,
-        ),
-      );
+      const t = parseTag(editing.tag_name ?? "");
+      const section = editing.section || t?.section || "";
+      const sub_section = editing.sub_section || t?.sub_section || "";
+      const main_equipment = editing.main_equipment || t?.main_equipment || "";
+      const found = mainEquipmentOptions(section, sub_section).find((item) => item.code === main_equipment);
+      setManualEquipment(!found);
       setForm({
-        unit: editing.unit,
-        section: editing.section,
-        sub_section: editing.sub_section,
-        main_equipment: editing.main_equipment,
-        main_equipment_name: editing.main_equipment_name ?? "",
-        parameter: editing.parameter ?? editing.subtype,
-        function_code: editing.function_code ?? "T",
-        sequence: editing.sequence,
-        year: editing.year,
+        unit: editing.unit || t?.unit || "",
+        section,
+        sub_section,
+        main_equipment,
+        main_equipment_name: editing.main_equipment_name ?? found?.label ?? "",
+        parameter: editing.parameter || t?.parameter || editing.subtype || "",
+        function_code: editing.function_code || t?.function_code || "",
+        sequence: editing.sequence || t?.sequence || "",
+        year: editing.year || t?.year || "",
         asset_serial: editing.asset_serial ?? "",
         manufacturer: editing.manufacturer ?? "",
         model: editing.model ?? "",
@@ -114,12 +134,7 @@ export function EquipmentForm({
       });
     } else {
       setManualEquipment(false);
-      const first = mainEquipmentOptions(emptyForm.section, emptyForm.sub_section)[0];
-      setForm({
-        ...emptyForm,
-        main_equipment: first?.code ?? "",
-        main_equipment_name: first?.label ?? "",
-      });
+      setForm(emptyForm);
     }
   }, [editing]);
 
@@ -155,12 +170,12 @@ export function EquipmentForm({
     items.some((i) => i.id !== editing?.id && i.asset_serial === form.asset_serial.trim());
 
   useEffect(() => {
-    if (!seqTouched && !editing) setForm((p) => (p.sequence === suggestedSeq ? p : { ...p, sequence: suggestedSeq }));
-  }, [suggestedSeq, seqTouched, editing]);
+    if (!seqTouched && !editing && form.parameter && form.function_code && form.main_equipment) setForm((p) => (p.sequence === suggestedSeq ? p : { ...p, sequence: suggestedSeq }));
+  }, [suggestedSeq, seqTouched, editing, form.parameter, form.function_code, form.main_equipment]);
   useEffect(() => {
-    if (!serialTouched && !editing)
+    if (!serialTouched && !editing && form.section)
       setForm((p) => (p.asset_serial === suggestedSerial ? p : { ...p, asset_serial: suggestedSerial }));
-  }, [suggestedSerial, serialTouched, editing]);
+  }, [suggestedSerial, serialTouched, editing, form.section]);
 
   // Vendor / model suggestions — never alter parameter/function
   const manufacturers = useMemo(() => {
@@ -196,8 +211,23 @@ export function EquipmentForm({
       : configuredSubSections;
   const equipmentList = mainEquipmentOptions(form.section, form.sub_section);
   const equipmentInList = equipmentList.some((item) => item.code === form.main_equipment);
-  const tag = useMemo(() => buildTag(form), [form]);
+  const tag = useMemo(
+    () =>
+      buildTag({
+        ...form,
+        unit: form.unit || "???",
+        section: form.section || "???",
+        sub_section: form.sub_section || "??",
+        main_equipment: form.main_equipment || "???",
+        parameter: form.parameter || "?",
+        function_code: form.function_code || "?",
+        sequence: form.sequence || "000",
+        year: form.year || "????",
+      }),
+    [form],
+  );
   const group = groupOfFunction(form.function_code);
+  const ready = Boolean(form.unit && form.section && form.sub_section && form.main_equipment && form.parameter && form.function_code);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -214,48 +244,32 @@ export function EquipmentForm({
   };
 
   const onSectionChange = (section: string) => {
-    const first = SUB_SECTIONS[section]?.[0]?.code ?? "0";
-    const firstEquipment = mainEquipmentOptions(section, first)[0];
+    if (!section || section === form.section) return;
+    const subs = SUB_SECTIONS[section] ?? [];
+    const sub = subs.length === 1 ? subs[0]!.code : "";
     setManualEquipment(false);
-    setForm((prev) => ({
-      ...prev,
-      section,
-      sub_section: first,
-      main_equipment: firstEquipment?.code ?? "",
-      main_equipment_name: firstEquipment?.label ?? "",
-    }));
+    setForm((prev) => ({ ...prev, section, sub_section: sub, main_equipment: "", main_equipment_name: "" }));
   };
 
   const onSubSectionChange = (subSection: string) => {
-    const firstEquipment = mainEquipmentOptions(form.section, subSection)[0];
+    if (!subSection || subSection === form.sub_section) return;
     setManualEquipment(false);
-    setForm((prev) => ({
-      ...prev,
-      sub_section: subSection,
-      main_equipment: firstEquipment?.code ?? "",
-      main_equipment_name: firstEquipment?.label ?? "",
-    }));
+    setForm((prev) => ({ ...prev, sub_section: subSection, main_equipment: "", main_equipment_name: "" }));
   };
 
   function reset() {
     setSeqTouched(false);
     setSerialTouched(false);
-    const first = mainEquipmentOptions(form.section, form.sub_section)[0];
-    setForm({
-      ...emptyForm,
-      unit: form.unit,
-      section: form.section,
-      sub_section: form.sub_section,
-      main_equipment: form.main_equipment || first?.code || "",
-      main_equipment_name: form.main_equipment_name || first?.label || "",
-      parameter: form.parameter,
-      function_code: form.function_code,
-      year: form.year,
-    });
+    setManualEquipment(false);
+    setForm(emptyForm);
   }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (!form.unit || !form.section || !form.sub_section || !form.main_equipment.trim() || !form.parameter || !form.function_code) {
+      toast.error("Байршил, параметр, функцийг бүрэн сонгоно уу.");
+      return;
+    }
     if (!form.sequence.trim() || !/^\d{4}$/.test(form.year)) {
       toast.error("Дарааллын дугаар болон 4 оронтой оныг зөв бөглөнө үү.");
       return;
@@ -321,7 +335,7 @@ export function EquipmentForm({
           </Picker>
         </Field>
         <Field label="Дэд хэсэг">
-          <Picker value={form.sub_section} onChange={(v) => v && onSubSectionChange(v)}>
+          <Picker value={form.sub_section} disabled={!form.section} onChange={(v) => v && onSubSectionChange(v)}>
             {subSectionOptions.map((s) => (
               <SelectItem key={s.code} value={s.code}>{s.label}</SelectItem>
             ))}
@@ -330,6 +344,7 @@ export function EquipmentForm({
         <Field label="Үндсэн тоног төхөөрөмж">
           <Picker
             value={manualEquipment || (!equipmentInList && form.main_equipment) ? CUSTOM_EQUIPMENT : form.main_equipment}
+            disabled={!form.sub_section}
             onChange={(v) => v && pickEquipment(v)}
           >
             {equipmentList.map((m) => (
@@ -429,7 +444,7 @@ export function EquipmentForm({
           ) : null}
         </Field>
         <Field label="Төлөв">
-          <Picker value={form.status} onChange={(v) => set("status", v)}>
+          <Picker value={form.status} onChange={(v) => v && set("status", v)}>
             {STATUSES.map((s) => (
               <SelectItem key={s.code} value={s.code}>{s.label}</SelectItem>
             ))}
@@ -443,6 +458,7 @@ export function EquipmentForm({
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Tag name</p>
             <p className="mt-2 font-mono text-xl font-semibold tracking-tight text-primary sm:text-2xl">{tag}</p>
             <p className="mt-1 font-mono text-xs text-muted-foreground">Хөрөнгийн сериал: {form.asset_serial || "—"}</p>
+            {!ready && <p className="mt-1 text-xs text-muted-foreground">Бүх сонголтыг бөглөхөд Tag name бүрэн үүснэ.</p>}
           </div>
           <Button type="button" variant="outline" size="sm" onClick={() => { void navigator.clipboard?.writeText(tag); toast.success("Tag name хуулагдлаа."); }}>
             <Copy className="size-4" /> Хуулах
@@ -545,10 +561,20 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function Picker({ value, onChange, children }: { value: string; onChange: (value: string) => void; children: React.ReactNode }) {
+function Picker({
+  value,
+  onChange,
+  children,
+  disabled,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  children: React.ReactNode;
+  disabled?: boolean;
+}) {
   return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+    <Select value={value} onValueChange={(v) => { if (v) onChange(v); }} disabled={Boolean(disabled)}>
+      <SelectTrigger className="w-full"><SelectValue placeholder="Сонгох..." /></SelectTrigger>
       <SelectContent>{children}</SelectContent>
     </Select>
   );
