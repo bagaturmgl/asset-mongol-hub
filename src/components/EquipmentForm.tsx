@@ -170,12 +170,12 @@ export function EquipmentForm({
     items.some((i) => i.id !== editing?.id && i.asset_serial === form.asset_serial.trim());
 
   useEffect(() => {
-    if (!seqTouched && !editing) setForm((p) => (p.sequence === suggestedSeq ? p : { ...p, sequence: suggestedSeq }));
-  }, [suggestedSeq, seqTouched, editing]);
+    if (!seqTouched && !editing && form.parameter && form.function_code && form.main_equipment) setForm((p) => (p.sequence === suggestedSeq ? p : { ...p, sequence: suggestedSeq }));
+  }, [suggestedSeq, seqTouched, editing, form.parameter, form.function_code, form.main_equipment]);
   useEffect(() => {
-    if (!serialTouched && !editing)
+    if (!serialTouched && !editing && form.section)
       setForm((p) => (p.asset_serial === suggestedSerial ? p : { ...p, asset_serial: suggestedSerial }));
-  }, [suggestedSerial, serialTouched, editing]);
+  }, [suggestedSerial, serialTouched, editing, form.section]);
 
   // Vendor / model suggestions — never alter parameter/function
   const manufacturers = useMemo(() => {
@@ -211,7 +211,21 @@ export function EquipmentForm({
       : configuredSubSections;
   const equipmentList = mainEquipmentOptions(form.section, form.sub_section);
   const equipmentInList = equipmentList.some((item) => item.code === form.main_equipment);
-  const tag = useMemo(() => buildTag(form), [form]);
+  const tag = useMemo(
+    () =>
+      buildTag({
+        ...form,
+        unit: form.unit || "???",
+        section: form.section || "???",
+        sub_section: form.sub_section || "??",
+        main_equipment: form.main_equipment || "???",
+        parameter: form.parameter || "?",
+        function_code: form.function_code || "?",
+        sequence: form.sequence || "000",
+        year: form.year || "????",
+      }),
+    [form],
+  );
   const group = groupOfFunction(form.function_code);
   const ready = Boolean(form.unit && form.section && form.sub_section && form.main_equipment && form.parameter && form.function_code);
 
