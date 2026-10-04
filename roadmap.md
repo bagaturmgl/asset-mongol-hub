@@ -10,3 +10,8 @@
 - [x] Section-specific subsection names and Tag codes
 - [x] Service units: ASU (БТАХ), MNU (УТХ), RSL (РШШЛ), GTR (УТАТАХ)
 - [x] Separate registration and inventory views with header navigation
+- [x] ISA-5.1 parameter/function tags, migrated 2,871 records
+- [x] Vendor/model suggestions, next sequence + conflict warning
+- [x] Section-coded 5-digit asset serial (1-00001…)
+- [x] Dated usage history, parameter/group filters
+- [ ] Offline (PWA) mode — not started

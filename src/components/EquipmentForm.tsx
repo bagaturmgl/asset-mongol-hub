@@ -155,12 +155,12 @@ export function EquipmentForm({
     items.some((i) => i.id !== editing?.id && i.asset_serial === form.asset_serial.trim());
 
   useEffect(() => {
-    if (!seqTouched) setForm((p) => (p.sequence === suggestedSeq ? p : { ...p, sequence: suggestedSeq }));
-  }, [suggestedSeq, seqTouched]);
+    if (!seqTouched && !editing) setForm((p) => (p.sequence === suggestedSeq ? p : { ...p, sequence: suggestedSeq }));
+  }, [suggestedSeq, seqTouched, editing]);
   useEffect(() => {
-    if (!serialTouched)
+    if (!serialTouched && !editing)
       setForm((p) => (p.asset_serial === suggestedSerial ? p : { ...p, asset_serial: suggestedSerial }));
-  }, [suggestedSerial, serialTouched]);
+  }, [suggestedSerial, serialTouched, editing]);
 
   // Vendor / model suggestions — never alter parameter/function
   const manufacturers = useMemo(() => {
