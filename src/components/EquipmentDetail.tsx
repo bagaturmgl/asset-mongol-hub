@@ -37,7 +37,6 @@ export function EquipmentDetail({
   savingMaintenance,
   canEdit = false,
   canDelete = false,
-  offline = false,
 }: {
   item: Equipment | null;
   onClose: () => void;
@@ -47,8 +46,6 @@ export function EquipmentDetail({
   savingMaintenance?: boolean;
   canEdit?: boolean;
   canDelete?: boolean;
-  /** Сүлжээгүй үед засварлах товчнуудыг нууж, тайлбар харуулна. */
-  offline?: boolean;
 }) {
   const [addOpen, setAddOpen] = useState(false);
   const [date, setDate] = useState("");
@@ -166,11 +163,7 @@ export function EquipmentDetail({
                   </Button>
                 )}
                 {!canEdit && (
-                  <p className="text-xs text-muted-foreground">
-                    {offline
-                      ? "Офлайн үед засварлах боломжгүй. Холболт сэргэхэд идэвхжинэ."
-                      : "Засварлахын тулд тухайн хэсгийн эрхээр нэвтэрнэ үү."}
-                  </p>
+                  <p className="text-xs text-muted-foreground">Засварлахын тулд тухайн хэсгийн эрхээр нэвтэрнэ үү.</p>
                 )}
               </div>
             </>
@@ -204,7 +197,7 @@ export function EquipmentDetail({
               Болих
             </Button>
             <Button
-              disabled={offline || !date || !note.trim() || savingMaintenance}
+              disabled={!date || !note.trim() || savingMaintenance}
               onClick={async () => {
                 if (!item) return;
                 await onAddMaintenance(item, date, note);
