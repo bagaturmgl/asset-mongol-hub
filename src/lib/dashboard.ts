@@ -1,4 +1,4 @@
-import { type Equipment, FUNCTIONS, PARAMETERS, isaCode } from "@/lib/equipment";
+import { type Equipment, FUNCTIONS, PARAMETERS, groupOfFunction, isaCode } from "@/lib/equipment";
 
 /**
  * Хянах самбарын 4 бүлэг. Ангилал нь зөвхөн deviceGroupOf()-д байгаа тул
@@ -10,17 +10,23 @@ export const DEVICE_GROUPS: { code: DeviceGroup; label: string; rule: string }[]
   {
     code: "sensor",
     label: "Мэдрэгч ба хувиргагч",
-    rule: "Мэдрэгч, хувиргагч бүлгийн бусад бүх төхөөрөмж",
+    rule: "Бусад бүх мэдрэгч, хувиргагч, метал илрүүлэгч (Y)",
   },
-  { code: "actuator", label: "Гүйцэтгэх механизм", rule: "Функц V — клапан, гүйцэтгэгч" },
+  { code: "actuator", label: "Гүйцэтгэх механизм", rule: "Функц V, Y — клапан, позиционер" },
   { code: "radiation", label: "Цацрагийн тоног төхөөрөмж", rule: "Параметр R — цацраг, радиометр" },
-  { code: "analyzer", label: "Анализатор", rule: "Параметр A — шинжилгээ, pH, метал" },
+  { code: "analyzer", label: "Анализатор", rule: "Параметр A — шинжилгээ, pH, Ca%" },
 ];
 
-export function deviceGroupOf(item: Pick<Equipment, "category" | "parameter">): DeviceGroup {
-  if (item.category === "A") return "actuator";
+export function deviceGroupOf(
+  item: Pick<Equipment, "category" | "parameter" | "function_code">,
+): DeviceGroup {
+  // Хадгалсан category хуучирсан байж болно (позиционер өмнө нь "C" байсан),
+  // тиймээс функц байвал бүлгийг түүнээс дахин тооцно.
+  const category = item.function_code ? groupOfFunction(item.function_code) : item.category;
+  if (category === "A") return "actuator";
   if (item.parameter === "R") return "radiation";
   if (item.parameter === "A") return "analyzer";
+  // Метал илрүүлэгч (параметр Y) болон бусад бүх мэдрэгч, хувиргагч
   return "sensor";
 }
 
