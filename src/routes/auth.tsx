@@ -34,7 +34,7 @@ function AuthPage() {
     if (mode === "in") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       setBusy(false);
-      if (error) return toast.error("Имэйл эсвэл нууц үг буруу байна.");
+      if (error) { toast.error("Имэйл эсвэл нууц үг буруу байна."); return; }
       navigate({ to: "/" });
     } else {
       const { error } = await supabase.auth.signUp({
@@ -43,7 +43,7 @@ function AuthPage() {
         options: { emailRedirectTo: window.location.origin },
       });
       setBusy(false);
-      if (error) return toast.error(error.message);
+      if (error) { toast.error(error.message); return; }
       toast.success("Имэйлээ шалгаж бүртгэлээ баталгаажуулна уу.");
       setMode("in");
     }

@@ -529,7 +529,7 @@ function Index() {
               onClick={async () => {
                 if (!deleting || !auth.user?.email) return;
                 const { error } = await supabase.auth.signInWithPassword({ email: auth.user.email, password: deletePw });
-                if (error) return toast.error("Нууц үг буруу байна.");
+                if (error) { toast.error("Нууц үг буруу байна."); return; }
                 removeItem.mutate(deleting.id);
                 setDeleting(null);
               }}
