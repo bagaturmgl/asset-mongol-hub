@@ -93,7 +93,7 @@ export function EquipmentDetail({
                   </Row>
                   <Row label="Параметр">{parameterLabel(item.parameter)}</Row>
                   <Row label="Функц">{functionLabel(item.function_code)}</Row>
-                  <Row label="Дарааллын дугаар">{item.sequence}</Row>
+                  <Row label="Байрлалын дугаар">{item.sequence}</Row>
                   <Row label="Үйлдвэрлэсэн он">{item.year}</Row>
                   <Row label="Үйлдвэрлэгч">{item.manufacturer || "—"}</Row>
                   <Row label="Модель">{item.model || "—"}</Row>
