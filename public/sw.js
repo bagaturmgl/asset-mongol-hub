@@ -18,7 +18,7 @@ const STATIC_CACHE = `static-${SW_VERSION}`;
 const KNOWN_CACHES = [PAGE_CACHE, ASSET_CACHE, STATIC_CACHE];
 
 const MAX_ASSET_ENTRIES = 250;
-const PRECACHE_PAGES = ["/"];
+const PRECACHE_PAGES = ["/", "/dashboard"];
 const PRECACHE_STATIC = [
   "/manifest.webmanifest",
   "/favicon.ico",

@@ -96,6 +96,7 @@ export const PARAMETERS = [
   { code: "V", label: "V — Чичиргээ" },
   { code: "S", label: "S — Хурд" },
   { code: "A", label: "A — Шинжилгээ / pH / Метал" },
+  { code: "R", label: "R — Цацраг / Радиометр" },
   { code: "Z", label: "Z — Байрлал / Төгсгөл" },
   { code: "M", label: "M — Чийгшил" },
   { code: "I", label: "I — Гүйдэл" },

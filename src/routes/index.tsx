@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const PAGE_SIZE = 50;
@@ -8,6 +8,7 @@ import {
   ClipboardPlus,
   Download,
   Factory,
+  LayoutDashboard,
   List,
   Loader2,
   LogIn,
@@ -18,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useEquipment } from "@/hooks/useEquipment";
 import { useInstallPrompt, useOnlineStatus } from "@/lib/pwa";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import {
@@ -161,25 +163,7 @@ function Index() {
     isError,
     failureCount,
     dataUpdatedAt,
-  } = useQuery({
-    queryKey: ["equipment"],
-    queryFn: async () => {
-      const PAGE = 1000;
-      const all: Equipment[] = [];
-      for (let from = 0; ; from += PAGE) {
-        const { data, error } = await supabase
-          .from("equipment")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .order("tag_name", { ascending: true })
-          .range(from, from + PAGE - 1);
-        if (error) throw error;
-        all.push(...((data ?? []) as Equipment[]));
-        if (!data || data.length < PAGE) break;
-      }
-      return all;
-    },
-  });
+  } = useEquipment();
 
   const removeItem = useMutation({
     mutationFn: async (id: string) => {
@@ -299,6 +283,12 @@ function Index() {
                 onClick={() => setView("inventory")}
               >
                 <List className="size-4" /> Бүртгэлийн жагсаалт
+              </Button>
+              {/* preload="render": офлайн үед ч нээгдэхээр хуудасны кодыг урьдчилан татаж кэшлүүлнэ */}
+              <Button type="button" size="sm" variant="ghost" asChild>
+                <Link to="/dashboard" preload="render">
+                  <LayoutDashboard className="size-4" /> Хянах самбар
+                </Link>
               </Button>
             </nav>
           </div>
