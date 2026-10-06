@@ -271,7 +271,7 @@ export function EquipmentForm({
       return;
     }
     if (!form.sequence.trim() || !/^\d{4}$/.test(form.year)) {
-      toast.error("Дарааллын дугаар болон 4 оронтой оныг зөв бөглөнө үү.");
+      toast.error("Байрлалын дугаар болон 4 оронтой оныг зөв бөглөнө үү.");
       return;
     }
     if (seqConflict) {
@@ -385,9 +385,9 @@ export function EquipmentForm({
           </Picker>
         </Field>
         <Field label="Ерөнхий бүлэг">
-          <Input value={categoryLabel(group)} readOnly className="bg-muted/50" />
+          <Input value={form.function_code ? categoryLabel(group) : ""} readOnly className="bg-muted/50" />
         </Field>
-        <Field label="Дарааллын дугаар">
+        <Field label="Байрлалын дугаар">
           <Input
             value={form.sequence}
             inputMode="numeric"
@@ -465,7 +465,7 @@ export function EquipmentForm({
           </Button>
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
-          Формат: {"{Эрхлэгч}-{Хэсэг}-{ДэдХэсэг}-{Төхөөрөмж}-{Параметр}{Функц}{Дараалал}-{Он}"}
+          Формат: {"{Эрхлэгч}-{Хэсэг}-{ДэдХэсэг}-{Төхөөрөмж}-{Параметр}{Функц}{Байрлал}-{Он}"}
         </p>
       </div>
 

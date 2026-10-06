@@ -296,8 +296,10 @@ export const MAIN_EQUIPMENTS_BY_SUB_SECTION: Record<string, { code: string; labe
   ],
 };
 
+export const WAREHOUSE = { code: "WH", label: "Агуулах" };
+
 export function mainEquipmentOptions(section: string, subSection: string) {
-  return MAIN_EQUIPMENTS_BY_SUB_SECTION[`${section}|${subSection}`] ?? [];
+  return [WAREHOUSE, ...(MAIN_EQUIPMENTS_BY_SUB_SECTION[`${section}|${subSection}`] ?? [])];
 }
 
 export function mainEquipmentLabel(section: string, subSection: string, code: string) {
