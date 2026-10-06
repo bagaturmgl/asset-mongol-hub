@@ -31,21 +31,31 @@ function AuthPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    if (mode === "in") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+      if (mode === "in") {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          toast.error("Имэйл эсвэл нууц үг буруу байна.");
+          return;
+        }
+        navigate({ to: "/" });
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: window.location.origin },
+        });
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        toast.success("Имэйлээ шалгаж бүртгэлээ баталгаажуулна уу.");
+        setMode("in");
+      }
+    } catch {
+      toast.error("Сервертэй холбогдож чадсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.");
+    } finally {
       setBusy(false);
-      if (error) return toast.error("Имэйл эсвэл нууц үг буруу байна.");
-      navigate({ to: "/" });
-    } else {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: window.location.origin },
-      });
-      setBusy(false);
-      if (error) return toast.error(error.message);
-      toast.success("Имэйлээ шалгаж бүртгэлээ баталгаажуулна уу.");
-      setMode("in");
     }
   }
 
