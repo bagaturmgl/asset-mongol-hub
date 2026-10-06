@@ -83,7 +83,7 @@ export const MAIN_EQUIPMENTS = ["M1", "M2", "M3", "M4", "M5"] as const;
 export const CATEGORIES = [
   { code: "S", label: "Мэдрэгч (E, S)" },
   { code: "C", label: "Хувиргагч (T, IT, I)" },
-  { code: "A", label: "Гүйцэтгэгч (V)" },
+  { code: "A", label: "Гүйцэтгэгч (V, Y)" },
 ] as const;
 
 /** ISA-5.1 параметр — эхний үсэг */
@@ -95,8 +95,10 @@ export const PARAMETERS = [
   { code: "W", label: "W — Жин" },
   { code: "V", label: "V — Чичиргээ" },
   { code: "S", label: "S — Хурд" },
-  { code: "A", label: "A — Шинжилгээ / pH / Метал" },
+  { code: "A", label: "A — Шинжилгээ / pH / Ca%" },
+  { code: "R", label: "R — Цацраг / Радиометр" },
   { code: "Z", label: "Z — Байрлал / Төгсгөл" },
+  { code: "Y", label: "Y — Илрэл / Метал илрүүлэгч" },
   { code: "M", label: "M — Чийгшил" },
   { code: "I", label: "I — Гүйдэл" },
   { code: "J", label: "J — Чадал" },
@@ -116,7 +118,8 @@ export const FUNCTIONS = [
 
 export function groupOfFunction(fn: string): "S" | "C" | "A" {
   if (fn === "E" || fn === "S") return "S";
-  if (fn === "V") return "A";
+  // Позиционер (Y) клапантайгаа хамт гүйцэтгэх механизмд тооцогдоно.
+  if (fn === "V" || fn === "Y") return "A";
   return "C";
 }
 
