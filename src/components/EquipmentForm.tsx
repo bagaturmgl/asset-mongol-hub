@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useOnlineStatus } from "@/lib/pwa";
 import {
   appendMaintenance,
   buildTag,
@@ -100,6 +101,7 @@ export function EquipmentForm({
 }) {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const online = useOnlineStatus();
   const [manualEquipment, setManualEquipment] = useState(false);
   const [seqTouched, setSeqTouched] = useState(false);
   const [serialTouched, setSerialTouched] = useState(false);
@@ -485,13 +487,18 @@ export function EquipmentForm({
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" disabled={saving}>
+        <Button type="submit" disabled={saving || !online}>
           {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
           {editing ? "Шинэчлэх" : "Бүртгэх"}
         </Button>
         <Button type="button" variant="ghost" onClick={() => (editing ? onDone?.() : reset())}>
           <RotateCcw className="size-4" /> {editing ? "Болих" : "Цэвэрлэх"}
         </Button>
+        {!online && (
+          <p className="self-center text-xs text-muted-foreground" role="status">
+            Сүлжээгүй байна. Холболт сэргэмэгц хадгалах боломжтой — оруулсан мэдээлэл хуудсан дээр хэвээр үлдэнэ.
+          </p>
+        )}
       </div>
     </form>
   );
