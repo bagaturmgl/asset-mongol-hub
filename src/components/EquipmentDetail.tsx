@@ -35,6 +35,8 @@ export function EquipmentDetail({
   onDelete,
   onAddMaintenance,
   savingMaintenance,
+  canEdit = false,
+  canDelete = false,
 }: {
   item: Equipment | null;
   onClose: () => void;
@@ -42,6 +44,8 @@ export function EquipmentDetail({
   onDelete: (item: Equipment) => void;
   onAddMaintenance: (item: Equipment, date: string, note: string) => Promise<void> | void;
   savingMaintenance?: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }) {
   const [addOpen, setAddOpen] = useState(false);
   const [date, setDate] = useState("");
@@ -143,15 +147,24 @@ export function EquipmentDetail({
               </div>
 
               <div className="flex flex-wrap gap-2 pt-2">
-                <Button onClick={() => onEdit(item)}>
-                  <Pencil className="size-4" /> Засварлах
-                </Button>
-                <Button variant="secondary" onClick={() => setAddOpen(true)}>
-                  <Wrench className="size-4" /> Засвар
-                </Button>
-                <Button variant="destructive" onClick={() => onDelete(item)}>
-                  <Trash2 className="size-4" /> Устгах
-                </Button>
+                {canEdit && (
+                  <>
+                    <Button onClick={() => onEdit(item)}>
+                      <Pencil className="size-4" /> Засварлах
+                    </Button>
+                    <Button variant="secondary" onClick={() => setAddOpen(true)}>
+                      <Wrench className="size-4" /> Засвар
+                    </Button>
+                  </>
+                )}
+                {canDelete && (
+                  <Button variant="destructive" onClick={() => onDelete(item)}>
+                    <Trash2 className="size-4" /> Устгах
+                  </Button>
+                )}
+                {!canEdit && (
+                  <p className="text-xs text-muted-foreground">Засварлахын тулд тухайн хэсгийн эрхээр нэвтэрнэ үү.</p>
+                )}
               </div>
             </>
           )}

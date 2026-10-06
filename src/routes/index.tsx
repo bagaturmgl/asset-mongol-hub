@@ -1,10 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const PAGE_SIZE = 50;
 const LIST_STATE_KEY = "equipment-list-state";
-import { ClipboardPlus, Download, Factory, List, Loader2, Search, X } from "lucide-react";
+import { ClipboardPlus, Download, Factory, List, Loader2, LogIn, LogOut, Search, Users, X } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 import { EquipmentDetail } from "@/components/EquipmentDetail";
@@ -123,6 +132,12 @@ function Index() {
   }, [restored, search, unit, section, category, parameter, page]);
   const [selected, setSelected] = useState<Equipment | null>(null);
   const [editing, setEditing] = useState<Equipment | null>(null);
+  const [deleting, setDeleting] = useState<Equipment | null>(null);
+  const [deletePw, setDeletePw] = useState("");
+  const auth = useAuth();
+  useEffect(() => {
+    if (!auth.loading && !auth.isAdmin && !auth.section && view === "register") setViewRaw("inventory");
+  }, [auth.loading, auth.isAdmin, auth.section, view]);
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["equipment"],
@@ -238,14 +253,16 @@ function Index() {
               </div>
             </div>
             <nav className="flex items-center gap-1 rounded-lg border bg-muted/40 p-1" aria-label="Үндсэн цэс">
-              <Button
-                type="button"
-                size="sm"
-                variant={view === "register" ? "default" : "ghost"}
-                onClick={() => { setEditing(null); setView("register"); }}
-              >
-                <ClipboardPlus className="size-4" /> Бүртгэл хийх
-              </Button>
+              {(auth.isAdmin || auth.section) && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={view === "register" ? "default" : "ghost"}
+                  onClick={() => { setEditing(null); setView("register"); }}
+                >
+                  <ClipboardPlus className="size-4" /> Бүртгэл хийх
+                </Button>
+              )}
               <Button
                 type="button"
                 size="sm"
@@ -256,11 +273,28 @@ function Index() {
               </Button>
             </nav>
           </div>
-          {view === "inventory" && (
-            <Button variant="outline" onClick={exportCsv} disabled={!filtered.length}>
-              <Download className="size-4" /> CSV / Excel экспорт
-            </Button>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {view === "inventory" && (
+              <Button variant="outline" onClick={exportCsv} disabled={!filtered.length}>
+                <Download className="size-4" /> CSV / Excel экспорт
+              </Button>
+            )}
+            {auth.isAdmin && (
+              <Button variant="outline" asChild>
+                <Link to="/users"><Users className="size-4" /> Хэрэглэгчид</Link>
+              </Button>
+            )}
+            {auth.user ? (
+              <Button variant="ghost" onClick={() => supabase.auth.signOut()}>
+                <LogOut className="size-4" />
+                {auth.isAdmin ? "Админ" : auth.section ? sectionLabel(auth.section) : auth.user.email}
+              </Button>
+            ) : (
+              <Button variant="ghost" asChild>
+                <Link to="/auth"><LogIn className="size-4" /> Нэвтрэх</Link>
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -460,6 +494,8 @@ function Index() {
 
       <EquipmentDetail
         item={selected}
+        canEdit={!!selected && auth.canEdit(selected.section)}
+        canDelete={auth.isAdmin}
         onClose={() => setSelected(null)}
         onEdit={(item) => {
           setEditing(item);
@@ -467,7 +503,7 @@ function Index() {
           setView("register");
           window.scrollTo({ top: 0, behavior: "smooth" });
         }}
-        onDelete={(item) => removeItem.mutate(item.id)}
+        onDelete={(item) => { setDeleting(item); setDeletePw(""); }}
         savingMaintenance={addMaintenance.isPending}
         onAddMaintenance={async (item, date, note) => {
           await addMaintenance.mutateAsync({ item, date, note });
@@ -477,6 +513,32 @@ function Index() {
           });
         }}
       />
+
+      <Dialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Устгахыг баталгаажуулах</DialogTitle>
+            <DialogDescription className="font-mono text-xs">{deleting?.tag_name}</DialogDescription>
+          </DialogHeader>
+          <Input type="password" placeholder="Админ нууц үг" value={deletePw} onChange={(e) => setDeletePw(e.target.value)} />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDeleting(null)}>Болих</Button>
+            <Button
+              variant="destructive"
+              disabled={!deletePw || removeItem.isPending}
+              onClick={async () => {
+                if (!deleting || !auth.user?.email) return;
+                const { error } = await supabase.auth.signInWithPassword({ email: auth.user.email, password: deletePw });
+                if (error) return toast.error("Нууц үг буруу байна.");
+                removeItem.mutate(deleting.id);
+                setDeleting(null);
+              }}
+            >
+              Устгах
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
