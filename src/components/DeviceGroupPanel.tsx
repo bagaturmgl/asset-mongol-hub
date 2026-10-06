@@ -2,13 +2,7 @@ import { Activity, FlaskConical, Gauge, Radiation, type LucideIcon } from "lucid
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, Tooltip, XAxis, YAxis } from "recharts";
 
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
-import {
-  TOP_TYPES,
-  type AgeRow,
-  type DeviceGroup,
-  type GroupSummary,
-  type TypeRow,
-} from "@/lib/dashboard";
+import { type AgeRow, type DeviceGroup, type GroupSummary, type TypeRow } from "@/lib/dashboard";
 
 const ICONS: Record<DeviceGroup, LucideIcon> = {
   sensor: Gauge,
@@ -27,9 +21,6 @@ const AGE_COLORS = [
   "oklch(0.47 0.11 240)",
   "oklch(0.35 0.10 248)",
 ];
-
-const BAR_ROW = 30;
-const chartHeight = (rows: number) => rows * BAR_ROW + 8;
 
 export function DeviceGroupPanel({
   group,
@@ -81,58 +72,50 @@ export function DeviceGroupPanel({
           </dl>
 
           <h3 className="mt-5 text-sm font-medium">Төрлөөр</h3>
-          {/* Олон баганатай үед насжилтын диаграмууд нэг түвшинд эгнэхийн тулд өндрийг тогтмол байлгана */}
-          <div
-            className="md:min-h-[var(--types-h)]"
-            style={{ "--types-h": `${chartHeight(TOP_TYPES) + 8}px` } as React.CSSProperties}
-          >
-            <TypeChart rows={group.types} label={group.label} />
-          </div>
+          <TypeList rows={group.types} label={group.label} />
 
-          <h3 className="mt-5 text-sm font-medium">Насжилтаар</h3>
-          <AgeChart rows={group.ages} label={group.label} />
-          <p className="mt-1 text-xs text-muted-foreground">
-            Нас жилээр, үйлдвэрлэсэн оноос тооцов.
-            {group.unknownAge > 0 && ` Он тодорхойгүй: ${group.unknownAge}.`}
-          </p>
+          {/* Нэг эгнээний картууд ижил өндөртэй тул насжилтын диаграмууд доод талдаа эгнэнэ */}
+          <div className="mt-auto pt-5">
+            <h3 className="text-sm font-medium">Насжилтаар</h3>
+            <AgeChart rows={group.ages} label={group.label} />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Нас жилээр, үйлдвэрлэсэн оноос тооцов.
+              {group.unknownAge > 0 && ` Он тодорхойгүй: ${group.unknownAge}.`}
+            </p>
+          </div>
         </>
       )}
     </section>
   );
 }
 
-function TypeChart({ rows, label }: { rows: TypeRow[]; label: string }) {
-  const summary = rows.map((r) => `${r.code} ${r.count}`).join(", ");
+/**
+ * Төрлийн жагсаалт: мөр бүрт ISA код, бүтэн нэр, тоо, доор нь харьцангуй урттай зурвас.
+ * Урт нэр SVG тэнхлэгт багтахгүй тул HTML-ээр зурсан; нэр таслагдвал хулганаар заахад бүтнээрээ гарна.
+ */
+function TypeList({ rows, label }: { rows: TypeRow[]; label: string }) {
+  const max = Math.max(1, ...rows.map((r) => r.count));
   return (
-    <ChartContainer
-      config={chartConfig}
-      className="mt-2 aspect-auto w-full"
-      style={{ height: chartHeight(rows.length) }}
-      role="img"
-      aria-label={`${label}, төрлөөр: ${summary}`}
-    >
-      <BarChart data={rows} layout="vertical" margin={{ top: 4, right: 36, bottom: 4, left: 0 }}>
-        <XAxis type="number" hide allowDecimals={false} />
-        <YAxis
-          type="category"
-          dataKey="code"
-          width={56}
-          tickLine={false}
-          axisLine={false}
-          tick={{ fontFamily: "var(--font-mono, ui-monospace, monospace)", fontSize: 12 }}
-        />
-        <Tooltip cursor={{ fill: "var(--muted)" }} content={<TypeTooltip />} />
-        <Bar dataKey="count" radius={4} barSize={18} isAnimationActive={false}>
-          {rows.map((r) => (
-            <Cell
-              key={r.code}
-              fill={r.code === "Бусад" ? "var(--muted-foreground)" : "var(--color-count)"}
-            />
-          ))}
-          <LabelList dataKey="count" position="right" fill="var(--foreground)" fontSize={12} />
-        </Bar>
-      </BarChart>
-    </ChartContainer>
+    <ul className="mt-2 space-y-2" aria-label={`${label}, төрлөөр`}>
+      {rows.map((r) => {
+        const other = r.code === "Бусад";
+        return (
+          <li key={r.code} title={`${r.code} — ${r.name}: ${r.count}`}>
+            <div className="flex items-baseline gap-2 text-xs">
+              <span className="w-12 shrink-0 font-mono font-semibold">{r.code}</span>
+              <span className="min-w-0 flex-1 truncate text-muted-foreground">{r.name}</span>
+              <span className="shrink-0 text-sm font-medium tabular-nums">{r.count}</span>
+            </div>
+            <div className="mt-1 h-1.5 rounded-full bg-muted" aria-hidden>
+              <div
+                className={`h-full rounded-full ${other ? "bg-muted-foreground/60" : "bg-primary"}`}
+                style={{ width: `${(r.count / max) * 100}%` }}
+              />
+            </div>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -170,12 +153,6 @@ function TipBox({ title, body }: { title: string; body: string }) {
       <p className="text-muted-foreground">{body}</p>
     </div>
   );
-}
-
-function TypeTooltip({ active, payload }: TipProps<TypeRow>) {
-  const row = active ? payload?.[0]?.payload : undefined;
-  if (!row) return null;
-  return <TipBox title={`${row.code}: ${row.count}`} body={row.name} />;
 }
 
 function AgeTooltip({ active, payload }: TipProps<AgeRow>) {
