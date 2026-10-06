@@ -275,7 +275,7 @@ export function EquipmentForm({
       return;
     }
     if (seqConflict) {
-      toast.error("Энэ дарааллын дугаар аль хэдийн бүртгэлтэй байна.");
+      toast.error("Энэ байрлалын дугаар аль хэдийн бүртгэлтэй байна.");
       return;
     }
     if (serialConflict) {
