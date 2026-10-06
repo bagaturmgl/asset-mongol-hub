@@ -4,8 +4,22 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const PAGE_SIZE = 50;
 const LIST_STATE_KEY = "equipment-list-state";
-import { ClipboardPlus, Download, Factory, List, Loader2, LogIn, LogOut, Search, Users, X } from "lucide-react";
+import {
+  ClipboardPlus,
+  Download,
+  Factory,
+  List,
+  Loader2,
+  LogIn,
+  LogOut,
+  MonitorSmartphone,
+  Search,
+  Users,
+  X,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useInstallPrompt, useOnlineStatus } from "@/lib/pwa";
+import { OfflineBanner } from "@/components/OfflineBanner";
 import {
   Dialog,
   DialogContent,
@@ -135,11 +149,19 @@ function Index() {
   const [deleting, setDeleting] = useState<Equipment | null>(null);
   const [deletePw, setDeletePw] = useState("");
   const auth = useAuth();
+  const online = useOnlineStatus();
+  const { canInstall, install } = useInstallPrompt();
   useEffect(() => {
     if (!auth.loading && !auth.isAdmin && !auth.section && view === "register") setViewRaw("inventory");
   }, [auth.loading, auth.isAdmin, auth.section, view]);
 
-  const { data: items = [], isLoading } = useQuery({
+  const {
+    data: items = [],
+    isLoading,
+    isError,
+    failureCount,
+    dataUpdatedAt,
+  } = useQuery({
     queryKey: ["equipment"],
     queryFn: async () => {
       const PAGE = 1000;
@@ -221,6 +243,11 @@ function Index() {
   const safePage = Math.min(page, totalPages);
   const pageItems = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
+  // Офлайн/сервер холбогдохгүй үед IndexedDB-ээс сэргээсэн хуулбарыг харуулна (src/lib/offline-cache.ts).
+  const hasData = dataUpdatedAt > 0;
+  // supabase-js өөрөө ч дахин оролддог тул isError хүлээвэл ~30 сек болно — эхний алдаан дээр мэдэгдэнэ.
+  const serverUnreachable = online && hasData && (isError || failureCount > 0);
+
   const hasFilters = search || unit !== ALL || section !== ALL || category !== ALL || parameter !== ALL;
 
   function exportCsv() {
@@ -258,6 +285,8 @@ function Index() {
                   type="button"
                   size="sm"
                   variant={view === "register" ? "default" : "ghost"}
+                  disabled={!online && view !== "register"}
+                  title={online ? undefined : "Офлайн үед бүртгэл хийх боломжгүй"}
                   onClick={() => { setEditing(null); setView("register"); }}
                 >
                   <ClipboardPlus className="size-4" /> Бүртгэл хийх
@@ -274,6 +303,11 @@ function Index() {
             </nav>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            {canInstall && (
+              <Button variant="outline" onClick={() => void install()}>
+                <MonitorSmartphone className="size-4" /> Апп суулгах
+              </Button>
+            )}
             {view === "inventory" && (
               <Button variant="outline" onClick={exportCsv} disabled={!filtered.length}>
                 <Download className="size-4" /> CSV / Excel экспорт
@@ -297,6 +331,13 @@ function Index() {
           </div>
         </div>
       </header>
+
+      <OfflineBanner
+        offline={!online}
+        serverUnreachable={serverUnreachable}
+        savedAt={dataUpdatedAt}
+        hasData={hasData}
+      />
 
       <main className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6">
         {view === "register" && (
@@ -416,7 +457,9 @@ function Index() {
                 {!isLoading && !filtered.length && (
                   <TableRow>
                     <TableCell colSpan={10} className="py-10 text-center text-muted-foreground">
-                      Бүртгэл олдсонгүй.
+                      {!online && !items.length
+                        ? "Офлайн байна. Энэ төхөөрөмж дээр хадгалсан бүртгэл алга."
+                        : "Бүртгэл олдсонгүй."}
                     </TableCell>
                   </TableRow>
                 )}
@@ -494,8 +537,9 @@ function Index() {
 
       <EquipmentDetail
         item={selected}
-        canEdit={!!selected && auth.canEdit(selected.section)}
-        canDelete={auth.isAdmin}
+        canEdit={online && !!selected && auth.canEdit(selected.section)}
+        canDelete={online && auth.isAdmin}
+        offline={!online}
         onClose={() => setSelected(null)}
         onEdit={(item) => {
           setEditing(item);
@@ -525,11 +569,18 @@ function Index() {
             <Button variant="ghost" onClick={() => setDeleting(null)}>Болих</Button>
             <Button
               variant="destructive"
-              disabled={!deletePw || removeItem.isPending}
+              disabled={!online || !deletePw || removeItem.isPending}
               onClick={async () => {
                 if (!deleting || !auth.user?.email) return;
+                if (!navigator.onLine) {
+                  toast.error("Сүлжээгүй байна. Холболт сэргэсний дараа устгана уу.");
+                  return;
+                }
                 const { error } = await supabase.auth.signInWithPassword({ email: auth.user.email, password: deletePw });
-                if (error) { toast.error("Нууц үг буруу байна."); return; }
+                if (error) {
+                  toast.error("Нууц үг буруу байна.");
+                  return;
+                }
                 removeItem.mutate(deleting.id);
                 setDeleting(null);
               }}

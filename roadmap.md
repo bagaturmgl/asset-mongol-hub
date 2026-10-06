@@ -14,4 +14,4 @@
 - [x] Vendor/model suggestions, next sequence + conflict warning
 - [x] Section-coded 5-digit asset serial (1-00001…)
 - [x] Dated usage history, parameter/group filters
-- [ ] Offline (PWA) mode — not started
+- [x] Offline (PWA) mode — installable app, offline app shell, cached inventory (IndexedDB); writes require connection
