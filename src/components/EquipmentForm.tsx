@@ -21,7 +21,8 @@ import {
   categoryLabel,
   Equipment,
   FUNCTIONS,
-  groupOfFunction,
+  groupOf,
+  isStandaloneCode,
   nextAssetSerial,
   PARAMETERS,
   SECTIONS,
@@ -60,6 +61,10 @@ function parseTag(tag: string) {
   const year = parts[parts.length - 1];
   const isa = parts[parts.length - 2] ?? "";
   const main_equipment = parts.slice(3, -2).join("-");
+  const letters = isa.replace(/\d+$/, "");
+  if (isStandaloneCode(letters)) {
+    return { unit, section, sub_section, main_equipment, parameter: letters, function_code: "", sequence: isa.slice(letters.length), year };
+  }
   const m = isa.match(/^([A-Z])([A-Z]{1,2}?)(\d+)$/);
   const fnCodes = FUNCTIONS.map((f) => f.code as string);
   let parameter = m?.[1] ?? "";
@@ -140,6 +145,9 @@ export function EquipmentForm({
     }
   }, [editing]);
 
+  // PU (насос) гэх мэт функцгүй код
+  const standalone = isStandaloneCode(form.parameter);
+
   // Same-slot records (excluding the one being edited)
   const siblings = useMemo(
     () =>
@@ -151,7 +159,7 @@ export function EquipmentForm({
           i.sub_section === form.sub_section &&
           i.main_equipment === form.main_equipment &&
           i.parameter === form.parameter &&
-          i.function_code === form.function_code,
+          (i.function_code ?? "") === form.function_code,
       ),
     [items, editing, form.unit, form.section, form.sub_section, form.main_equipment, form.parameter, form.function_code],
   );
@@ -172,8 +180,8 @@ export function EquipmentForm({
     items.some((i) => i.id !== editing?.id && i.asset_serial === form.asset_serial.trim());
 
   useEffect(() => {
-    if (!seqTouched && !editing && form.parameter && form.function_code && form.main_equipment) setForm((p) => (p.sequence === suggestedSeq ? p : { ...p, sequence: suggestedSeq }));
-  }, [suggestedSeq, seqTouched, editing, form.parameter, form.function_code, form.main_equipment]);
+    if (!seqTouched && !editing && form.parameter && (standalone || form.function_code) && form.main_equipment) setForm((p) => (p.sequence === suggestedSeq ? p : { ...p, sequence: suggestedSeq }));
+  }, [suggestedSeq, seqTouched, editing, form.parameter, form.function_code, form.main_equipment, standalone]);
   useEffect(() => {
     if (!serialTouched && !editing && form.section)
       setForm((p) => (p.asset_serial === suggestedSerial ? p : { ...p, asset_serial: suggestedSerial }));
@@ -222,14 +230,16 @@ export function EquipmentForm({
         sub_section: form.sub_section || "??",
         main_equipment: form.main_equipment || "???",
         parameter: form.parameter || "?",
-        function_code: form.function_code || "?",
+        function_code: form.function_code || (standalone ? "" : "?"),
         sequence: form.sequence || "000",
         year: form.year || "????",
       }),
     [form],
   );
-  const group = groupOfFunction(form.function_code);
-  const ready = Boolean(form.unit && form.section && form.sub_section && form.main_equipment && form.parameter && form.function_code);
+  const group = groupOf(form.parameter, form.function_code);
+  const ready = Boolean(
+    form.unit && form.section && form.sub_section && form.main_equipment && form.parameter && (standalone || form.function_code),
+  );
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -268,7 +278,7 @@ export function EquipmentForm({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (!form.unit || !form.section || !form.sub_section || !form.main_equipment.trim() || !form.parameter || !form.function_code) {
+    if (!form.unit || !form.section || !form.sub_section || !form.main_equipment.trim() || !form.parameter || (!standalone && !form.function_code)) {
       toast.error("Байршил, параметр, функцийг бүрэн сонгоно уу.");
       return;
     }
@@ -288,6 +298,7 @@ export function EquipmentForm({
     const payload = {
       ...form,
       category: group,
+      function_code: standalone ? null : form.function_code,
       subtype: form.parameter,
       sequence: form.sequence.trim().padStart(3, "0"),
       main_equipment: form.main_equipment.trim().toUpperCase(),
@@ -373,21 +384,30 @@ export function EquipmentForm({
 
       <Step n={2} title="Параметр ба функц (ISA-5.1)">
         <Field label="Параметр">
-          <Picker value={form.parameter} onChange={(v) => v && set("parameter", v)}>
+          <Picker
+            value={form.parameter}
+            onChange={(v) =>
+              v && setForm((prev) => ({ ...prev, parameter: v, function_code: isStandaloneCode(v) ? "" : prev.function_code }))
+            }
+          >
             {PARAMETERS.map((p) => (
               <SelectItem key={p.code} value={p.code}>{p.label}</SelectItem>
             ))}
           </Picker>
         </Field>
         <Field label="Функц">
-          <Picker value={form.function_code} onChange={(v) => v && set("function_code", v)}>
-            {FUNCTIONS.map((f) => (
-              <SelectItem key={f.code} value={f.code}>{f.label}</SelectItem>
-            ))}
-          </Picker>
+          {standalone ? (
+            <Input value="Шаардлагагүй" readOnly className="bg-muted/50" />
+          ) : (
+            <Picker value={form.function_code} onChange={(v) => v && set("function_code", v)}>
+              {FUNCTIONS.map((f) => (
+                <SelectItem key={f.code} value={f.code}>{f.label}</SelectItem>
+              ))}
+            </Picker>
+          )}
         </Field>
         <Field label="Ерөнхий бүлэг">
-          <Input value={form.function_code ? categoryLabel(group) : ""} readOnly className="bg-muted/50" />
+          <Input value={standalone || form.function_code ? categoryLabel(group) : ""} readOnly className="bg-muted/50" />
         </Field>
         <Field label="Байрлалын дугаар">
           <Input
