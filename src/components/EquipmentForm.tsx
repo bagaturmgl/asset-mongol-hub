@@ -30,6 +30,7 @@ import {
   SUB_SECTIONS,
   UNITS,
   vendorIsaDefault,
+  modelIsaDefault,
 } from "@/lib/equipment";
 import { mainEquipmentOptions } from "@/lib/main-equipments";
 
