@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { useOnlineStatus } from "@/lib/pwa";
 import {
   appendMaintenance,
@@ -236,7 +237,7 @@ export function EquipmentForm({
         sequence: form.sequence || "000",
         year: form.year || "????",
       }),
-    [form],
+    [form, standalone],
   );
   const group = groupOf(form.parameter, form.function_code);
   const ready = Boolean(
@@ -257,6 +258,10 @@ export function EquipmentForm({
     setForm((prev) => ({ ...prev, main_equipment: code, main_equipment_name: found?.label ?? "" }));
   };
 
+  // Хэрэглэгч зөвхөн өөрт оноосон хэсгүүдээ сонгоно (админ бүгдийг)
+  const auth = useAuth();
+  const allowedSections = auth.isAdmin ? SECTIONS : SECTIONS.filter((s) => auth.sections.includes(s.code));
+
   const onSectionChange = (section: string) => {
     if (!section || section === form.section) return;
     const subs = SUB_SECTIONS[section] ?? [];
@@ -264,6 +269,12 @@ export function EquipmentForm({
     setManualEquipment(false);
     setForm((prev) => ({ ...prev, section, sub_section: sub, main_equipment: "", main_equipment_name: "" }));
   };
+
+  useEffect(() => {
+    const only = allowedSections.length === 1 ? allowedSections[0]!.code : "";
+    if (!editing && !form.section && only) onSectionChange(only);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing, form.section, allowedSections.length]);
 
   const onSubSectionChange = (subSection: string) => {
     if (!subSection || subSection === form.sub_section) return;
@@ -323,7 +334,9 @@ export function EquipmentForm({
       toast.error(
         error.code === "23505"
           ? "Ийм Tag name аль хэдийн бүртгэгдсэн байна."
-          : "Хадгалахад алдаа гарлаа: " + error.message,
+          : error.code === "42501" || /row-level security/i.test(error.message)
+            ? "Энэ хэсэгт бүртгэл хийх эрх танд байхгүй байна. Админд хандана уу."
+            : "Хадгалахад алдаа гарлаа: " + error.message,
       );
       return;
     }
@@ -343,8 +356,8 @@ export function EquipmentForm({
           </Picker>
         </Field>
         <Field label="Үндсэн хэсэг">
-          <Picker value={form.section} onChange={onSectionChange}>
-            {SECTIONS.map((s) => (
+          <Picker value={form.section} onChange={onSectionChange} disabled={auth.loading}>
+            {allowedSections.map((s) => (
               <SelectItem key={s.code} value={s.code}>{s.label}</SelectItem>
             ))}
           </Picker>
