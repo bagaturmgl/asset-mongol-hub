@@ -83,7 +83,7 @@ export const MAIN_EQUIPMENTS = ["M1", "M2", "M3", "M4", "M5"] as const;
 export const CATEGORIES = [
   { code: "S", label: "Мэдрэгч (E, S)" },
   { code: "C", label: "Хувиргагч (T, IT, I)" },
-  { code: "A", label: "Гүйцэтгэгч (V, Y)" },
+  { code: "A", label: "Гүйцэтгэгч (V, VA, Y, PU)" },
 ] as const;
 
 /** ISA-5.1 параметр — эхний үсэг */
@@ -94,7 +94,7 @@ export const PARAMETERS = [
   { code: "F", label: "F — Зарцуулалт" },
   { code: "W", label: "W — Жин" },
   { code: "V", label: "V — Чичиргээ" },
-  { code: "S", label: "S — Хурд" },   
+  { code: "S", label: "S — Хурд" },
   { code: "A", label: "A — Шинжилгээ / pH / Ca% / Чийгшил" },
   { code: "R", label: "R — Цацраг / Радиометр" },
   { code: "Z", label: "Z — Байрлал / Төгсгөл" },
@@ -102,7 +102,18 @@ export const PARAMETERS = [
   { code: "I", label: "I — Гүйдэл" },
   { code: "J", label: "J — Чадал" },
   { code: "X", label: "X — Бусад / Ерөнхий" },
+  { code: "PU", label: "PU — Насос (функцгүй)" },
 ] as const;
+
+/**
+ * Функц шаардлагагүй, бүтэн кодоороо Tag-д ордог тоног төхөөрөмж (жишээ нь PU001 — насос)
+ * ба тэдгээрийн ерөнхий бүлэг.
+ */
+export const STANDALONE_CODES: Record<string, "S" | "C" | "A"> = { PU: "A" };
+
+export function isStandaloneCode(code: string | null | undefined): boolean {
+  return !!code && code in STANDALONE_CODES;
+}
 
 /** ISA-5.1 функц — дараагийн үсэг */
 export const FUNCTIONS = [
@@ -111,15 +122,25 @@ export const FUNCTIONS = [
   { code: "E", label: "E — Мэдрэгч элемент" },
   { code: "I", label: "I — Заагч / Манометр" },
   { code: "S", label: "S — Унтраалга / Реле" },
-  { code: "V", label: "V — Клапан / Гүйцэтгэгч" },
-  { code: "Y", label: "Y — Позиционер / Хөрвүүлэгч" },
+  { code: "V", label: "V — Хаалт / Клапан" },
+  { code: "VA", label: "VA — Актуатор" },
+  { code: "Y", label: "Y — Позиционер / Соленойд / Хөрвүүлэгч" },
 ] as const;
 
 export function groupOfFunction(fn: string): "S" | "C" | "A" {
   if (fn === "E" || fn === "S") return "S";
-  // Позиционер (Y) клапантайгаа хамт гүйцэтгэх механизмд тооцогдоно.
-  if (fn === "V" || fn === "Y") return "A";
+  // Хаалт (V), актуатор (VA), позиционер ба соленойд (Y) гүйцэтгэх механизмд тооцогдоно.
+  if (fn === "V" || fn === "VA" || fn === "Y") return "A";
   return "C";
+}
+
+/** Параметр + функцээс ерөнхий бүлэг; функцгүй код (PU) бол өөрийн бүлэгтэй. */
+export function groupOf(
+  parameter: string | null | undefined,
+  fn: string | null | undefined,
+): "S" | "C" | "A" {
+  if (isStandaloneCode(parameter)) return STANDALONE_CODES[parameter as string]!;
+  return groupOfFunction(fn ?? "");
 }
 
 export function parameterLabel(code: string | null) {
@@ -175,7 +196,6 @@ export function subSectionLabel(section: string, code: string) {
   return SUB_SECTIONS[section]?.find((subSection) => subSection.code === code)?.label ?? code;
 }
 
-
 export type MaintenanceEntry = { date: string; note: string };
 
 export function parseMaintenance(text: string | null): MaintenanceEntry[] {
@@ -196,11 +216,7 @@ export function lastMaintenance(text: string | null): MaintenanceEntry | null {
   return parseMaintenance(text).find((e) => e.date) ?? parseMaintenance(text)[0] ?? null;
 }
 
-export function appendMaintenance(
-  text: string | null,
-  date: string,
-  note: string,
-): string {
+export function appendMaintenance(text: string | null, date: string, note: string): string {
   const line = `${date} — ${note.trim()}`;
   return text && text.trim() ? `${text.trim()}\n${line}` : line;
 }
@@ -219,8 +235,13 @@ export function buildTag(v: {
   return `${v.unit}-${v.section}-${v.sub_section}-${v.main_equipment}-${v.parameter}${v.function_code}${seq}-${v.year}`;
 }
 
-export function isaCode(r: Pick<Equipment, "parameter" | "function_code" | "category" | "subtype">) {
-  return r.parameter && r.function_code ? `${r.parameter}${r.function_code}` : `${r.category}${r.subtype}`;
+export function isaCode(
+  r: Pick<Equipment, "parameter" | "function_code" | "category" | "subtype">,
+) {
+  if (r.parameter && isStandaloneCode(r.parameter)) return r.parameter;
+  return r.parameter && r.function_code
+    ? `${r.parameter}${r.function_code}`
+    : `${r.category}${r.subtype}`;
 }
 
 export function toCsv(rows: Equipment[]) {
