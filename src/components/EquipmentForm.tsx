@@ -455,7 +455,20 @@ export function EquipmentForm({
           </datalist>
         </Field>
         <Field label="Модель">
-          <Input value={form.model} list="model-list" placeholder="Cerabar PMC51" onChange={(e) => set("model", e.target.value)} />
+          <Input
+            value={form.model}
+            list="model-list"
+            placeholder="Cerabar PMC51"
+            onChange={(e) => {
+              const v = e.target.value;
+              const d = modelIsaDefault(v);
+              setForm((p) => ({
+                ...p,
+                model: v,
+                ...(d ? { parameter: d.parameter, function_code: d.function_code } : {}),
+              }));
+            }}
+          />
           <datalist id="model-list">
             {models.slice(0, 200).map((m) => <option key={m} value={m} />)}
           </datalist>
