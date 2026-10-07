@@ -4,6 +4,16 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Check, Pencil, Trash2, X } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -99,6 +109,8 @@ function UsersPage() {
   const [password, setPassword] = useState("");
   const [sections, setSections] = useState<string[]>([]);
   const [editing, setEditing] = useState<{ user_id: string; sections: string[] } | null>(null);
+  // Устгахаар сонгосон хэрэглэгч — апп доторх баталгаажуулах цонх (хөтчийн confirm() зарим орчинд гарахгүй)
+  const [deleting, setDeleting] = useState<SectionUser | null>(null);
 
   const refresh = () => void qc.invalidateQueries({ queryKey: ["section-users"] });
   const users = useQuery({
@@ -131,6 +143,7 @@ function UsersPage() {
     mutationFn: (user_id: string) => remove({ data: { user_id } }),
     onSuccess: () => {
       toast.success("Хэрэглэгч устгагдлаа.");
+      setDeleting(null);
       refresh();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -146,11 +159,6 @@ function UsersPage() {
         </Link>
       </div>
     );
-
-  const confirmDelete = (u: SectionUser) => {
-    if (window.confirm(`${u.email} хэрэглэгчийг устгах уу? Энэ үйлдлийг буцаах боломжгүй.`))
-      del.mutate(u.user_id);
-  };
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
@@ -230,7 +238,7 @@ function UsersPage() {
                       size="icon"
                       variant="ghost"
                       aria-label={`${u.email}-ийг устгах`}
-                      onClick={() => confirmDelete(u)}
+                      onClick={() => setDeleting(u)}
                     >
                       <Trash2 className="size-4" />
                     </Button>
@@ -266,6 +274,34 @@ function UsersPage() {
           );
         })}
       </ul>
+
+      <AlertDialog
+        open={!!deleting}
+        onOpenChange={(open) => !open && !del.isPending && setDeleting(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Хэрэглэгчийг устгах уу?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <span className="font-medium text-foreground">{deleting?.email}</span> бүртгэл болон
+              түүний бүх хэсгийн эрх устана. Энэ үйлдлийг буцаах боломжгүй.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={del.isPending}>Болих</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={del.isPending}
+              onClick={(e) => {
+                e.preventDefault(); // устгал дуустал цонхыг хаахгүй
+                if (deleting) del.mutate(deleting.user_id);
+              }}
+            >
+              {del.isPending ? "Устгаж байна…" : "Устгах"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
