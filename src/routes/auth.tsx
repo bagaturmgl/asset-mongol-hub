@@ -23,35 +23,21 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
+  // Олон нийтэд нээлттэй бүртгэл байхгүй: хэсгийн хэрэглэгчийг админ "Хэрэглэгчид" хуудаснаас үүсгэнэ.
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     try {
-      if (mode === "in") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-          toast.error("Имэйл эсвэл нууц үг буруу байна.");
-          return;
-        }
-        navigate({ to: "/" });
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: window.location.origin },
-        });
-        if (error) {
-          toast.error(error.message);
-          return;
-        }
-        toast.success("Имэйлээ шалгаж бүртгэлээ баталгаажуулна уу.");
-        setMode("in");
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        toast.error("Имэйл эсвэл нууц үг буруу байна.");
+        return;
       }
+      navigate({ to: "/" });
     } catch {
       toast.error("Сервертэй холбогдож чадсангүй. Сүлжээгээ шалгаад дахин оролдоно уу.");
     } finally {
@@ -66,24 +52,29 @@ function AuthPage() {
           <span className="flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Factory className="size-5" />
           </span>
-          <h1 className="text-lg font-semibold">{mode === "in" ? "Нэвтрэх" : "Админ бүртгүүлэх"}</h1>
+          <h1 className="text-lg font-semibold">Нэвтрэх</h1>
         </div>
         <div className="space-y-2">
-          <Label>Имэйл</Label>
-          <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Label htmlFor="email">Имэйл</Label>
+          <Input id="email" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div className="space-y-2">
-          <Label>Нууц үг</Label>
-          <Input type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Label htmlFor="password">Нууц үг</Label>
+          <Input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </div>
         <Button type="submit" className="w-full" disabled={busy}>
-          {mode === "in" ? "Нэвтрэх" : "Бүртгүүлэх"}
+          Нэвтрэх
         </Button>
-        <div className="flex justify-between text-xs">
-          <button type="button" className="text-primary underline" onClick={() => setMode(mode === "in" ? "up" : "in")}>
-            {mode === "in" ? "Админ анх удаа бүртгүүлэх" : "Нэвтрэх рүү буцах"}
-          </button>
-          <Link to="/" className="text-muted-foreground underline">Жагсаалт руу</Link>
+        <div className="flex items-center justify-between gap-3 text-xs">
+          <span className="text-muted-foreground">Эрх авах бол админд хандана уу.</span>
+          <Link to="/" className="shrink-0 text-muted-foreground underline">Жагсаалт руу</Link>
         </div>
       </form>
     </div>
