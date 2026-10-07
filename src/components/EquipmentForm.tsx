@@ -29,6 +29,7 @@ import {
   STATUSES,
   SUB_SECTIONS,
   UNITS,
+  vendorIsaDefault,
 } from "@/lib/equipment";
 import { mainEquipmentOptions } from "@/lib/main-equipments";
 
@@ -435,7 +436,20 @@ export function EquipmentForm({
 
       <Step n={3} title="Үйлдвэрлэгч ба загвар">
         <Field label="Үйлдвэрлэгч">
-          <Input value={form.manufacturer} list="mf-list" placeholder="Endress+Hauser" onChange={(e) => set("manufacturer", e.target.value)} />
+          <Input
+            value={form.manufacturer}
+            list="mf-list"
+            placeholder="Endress+Hauser"
+            onChange={(e) => {
+              const v = e.target.value;
+              const d = vendorIsaDefault(v);
+              setForm((p) => ({
+                ...p,
+                manufacturer: v,
+                ...(d ? { parameter: d.parameter, function_code: d.function_code } : {}),
+              }));
+            }}
+          />
           <datalist id="mf-list">
             {manufacturers.map((m) => <option key={m} value={m} />)}
           </datalist>

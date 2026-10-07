@@ -115,6 +115,20 @@ export function isStandaloneCode(code: string | null | undefined): boolean {
   return !!code && code in STANDALONE_CODES;
 }
 
+/** Үйлдвэрлэгчээс хамаарах ISA кодын анхдагч утга (жижиг үсгээр түлхүүрлэнэ). */
+export const VENDOR_ISA_DEFAULTS: Record<string, { parameter: string; function_code: string }> = {
+  grundfos: { parameter: "PU", function_code: "" },
+  bronkhorst: { parameter: "PU", function_code: "" },
+  festo: { parameter: "X", function_code: "VA" },
+  smc: { parameter: "X", function_code: "VA" },
+  airtac: { parameter: "X", function_code: "Y" },
+};
+
+export function vendorIsaDefault(manufacturer: string | null | undefined) {
+  const key = manufacturer?.trim().toLowerCase();
+  return key ? VENDOR_ISA_DEFAULTS[key] : undefined;
+}
+
 /** ISA-5.1 функц — дараагийн үсэг */
 export const FUNCTIONS = [
   { code: "IT", label: "IT — Дэлгэцтэй хувиргагч" },
