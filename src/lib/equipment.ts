@@ -122,6 +122,7 @@ export const VENDOR_ISA_DEFAULTS: Record<string, { parameter: string; function_c
   festo: { parameter: "X", function_code: "VA" },
   smc: { parameter: "X", function_code: "VA" },
   airtac: { parameter: "X", function_code: "Y" },
+  asco: { parameter: "X", function_code: "Y" },
 };
 
 export function vendorIsaDefault(manufacturer: string | null | undefined) {
