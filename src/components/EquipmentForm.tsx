@@ -29,6 +29,7 @@ import {
   STATUSES,
   SUB_SECTIONS,
   UNITS,
+  vendorIsaDefault,
 } from "@/lib/equipment";
 import { mainEquipmentOptions } from "@/lib/main-equipments";
 
