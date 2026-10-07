@@ -130,6 +130,19 @@ export function vendorIsaDefault(manufacturer: string | null | undefined) {
   return key ? VENDOR_ISA_DEFAULTS[key] : undefined;
 }
 
+/** Загвараас хамаарах ISA кодын анхдагч утга — үйлдвэрлэгчийн дүрмээс илүү тэргүүлнэ. */
+export const MODEL_ISA_DEFAULTS: Record<string, { parameter: string; function_code: string }> = {
+  "cmsx-p-se-c-u-f1-d-50-c": { parameter: "Z", function_code: "Y" },
+  "ne700/np700": { parameter: "Z", function_code: "Y" },
+  "np700/ne700": { parameter: "Z", function_code: "Y" },
+  ip8000: { parameter: "Z", function_code: "Y" },
+};
+
+export function modelIsaDefault(model: string | null | undefined) {
+  const key = model?.trim().toLowerCase();
+  return key ? MODEL_ISA_DEFAULTS[key] : undefined;
+}
+
 /** ISA-5.1 функц — дараагийн үсэг */
 export const FUNCTIONS = [
   { code: "IT", label: "IT — Дэлгэцтэй хувиргагч" },
