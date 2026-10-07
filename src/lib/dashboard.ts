@@ -10,11 +10,11 @@ export const DEVICE_GROUPS: { code: DeviceGroup; label: string; rule: string }[]
   {
     code: "sensor",
     label: "Мэдрэгч ба хувиргагч",
-    rule: "Бусад бүх мэдрэгч, хувиргагч, метал илрүүлэгч (Y)",
+    rule: "Бусад бүх мэдрэгч, хувиргагч, металл илрүүлэгч (M)",
   },
   { code: "actuator", label: "Гүйцэтгэх механизм", rule: "Функц V, Y — клапан, позиционер" },
   { code: "radiation", label: "Цацрагийн тоног төхөөрөмж", rule: "Параметр R — цацраг, радиометр" },
-  { code: "analyzer", label: "Анализатор", rule: "Параметр A — шинжилгээ, pH, Ca%" },
+  { code: "analyzer", label: "Анализатор", rule: "Параметр A — шинжилгээ, pH, Ca%, чийгшил" },
 ];
 
 export function deviceGroupOf(
@@ -26,7 +26,7 @@ export function deviceGroupOf(
   if (category === "A") return "actuator";
   if (item.parameter === "R") return "radiation";
   if (item.parameter === "A") return "analyzer";
-  // Метал илрүүлэгч (параметр Y) болон бусад бүх мэдрэгч, хувиргагч
+  // Металл илрүүлэгч (параметр M) болон бусад бүх мэдрэгч, хувиргагч
   return "sensor";
 }
 
@@ -53,13 +53,18 @@ export function ageOf(year: string | null | undefined, currentYear: number): num
 
 /* ---------- Төрлөөр (ISA код) ---------- */
 
-const shortLabel = (label: string) => label.split("— ")[1] ?? label;
+/** "P — Даралт" → "Даралт", "A — Шинжилгээ / pH / Ca% / Чийгшил" → "Шинжилгээ" */
+const mainWord = (label: string) =>
+  (label.split("— ")[1] ?? label).split(" / ")[0]?.trim() ?? label;
 
+/** Хянах самбарт кодын хажууд харагдах нэр, жишээ нь PIT → "Даралт · дэлгэцтэй хувиргагч". */
 function typeName(item: Equipment): string {
   const p = PARAMETERS.find((x) => x.code === item.parameter);
   const f = FUNCTIONS.find((x) => x.code === item.function_code);
-  if (p && f) return `${shortLabel(p.label)}, ${shortLabel(f.label).toLowerCase()}`;
-  return isaCode(item);
+  if (!p || !f) return isaCode(item);
+  // X (Бусад / Ерөнхий) параметрт функцийн нэр л утга агуулна: XV → "Клапан"
+  if (p.code === "X") return mainWord(f.label);
+  return `${mainWord(p.label)} · ${mainWord(f.label).toLowerCase()}`;
 }
 
 export type TypeRow = { code: string; name: string; count: number };
