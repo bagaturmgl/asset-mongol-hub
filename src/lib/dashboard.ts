@@ -1,4 +1,12 @@
-import { type Equipment, FUNCTIONS, PARAMETERS, groupOfFunction, isaCode } from "@/lib/equipment";
+import {
+  type Equipment,
+  FUNCTIONS,
+  PARAMETERS,
+  STANDALONE_CODES,
+  groupOfFunction,
+  isStandaloneCode,
+  isaCode,
+} from "@/lib/equipment";
 
 /**
  * Хянах самбарын 4 бүлэг. Ангилал нь зөвхөн deviceGroupOf()-д байгаа тул
@@ -12,7 +20,11 @@ export const DEVICE_GROUPS: { code: DeviceGroup; label: string; rule: string }[]
     label: "Мэдрэгч ба хувиргагч",
     rule: "Бусад бүх мэдрэгч, хувиргагч, металл илрүүлэгч (M)",
   },
-  { code: "actuator", label: "Гүйцэтгэх механизм", rule: "Функц V, Y — клапан, позиционер" },
+  {
+    code: "actuator",
+    label: "Гүйцэтгэх механизм",
+    rule: "Функц V, VA, Y ба PU — хаалт, актуатор, соленойд, позиционер, насос",
+  },
   { code: "radiation", label: "Цацрагийн тоног төхөөрөмж", rule: "Параметр R — цацраг, радиометр" },
   { code: "analyzer", label: "Анализатор", rule: "Параметр A — шинжилгээ, pH, Ca%, чийгшил" },
 ];
@@ -22,7 +34,11 @@ export function deviceGroupOf(
 ): DeviceGroup {
   // Хадгалсан category хуучирсан байж болно (позиционер өмнө нь "C" байсан),
   // тиймээс функц байвал бүлгийг түүнээс дахин тооцно.
-  const category = item.function_code ? groupOfFunction(item.function_code) : item.category;
+  const category = isStandaloneCode(item.parameter)
+    ? STANDALONE_CODES[item.parameter as string]
+    : item.function_code
+      ? groupOfFunction(item.function_code)
+      : item.category;
   if (category === "A") return "actuator";
   if (item.parameter === "R") return "radiation";
   if (item.parameter === "A") return "analyzer";
@@ -57,12 +73,20 @@ export function ageOf(year: string | null | undefined, currentYear: number): num
 const mainWord = (label: string) =>
   (label.split("— ")[1] ?? label).split(" / ")[0]?.trim() ?? label;
 
+/** Ерөнхий дүрмээр гарахгүй тусгай нэрс (ISA код → нэр). */
+const NAME_OVERRIDES: Record<string, string> = { XY: "Соленойд" };
+
 /** Хянах самбарт кодын хажууд харагдах нэр, жишээ нь PIT → "Даралт · дэлгэцтэй хувиргагч". */
 function typeName(item: Equipment): string {
+  const code = isaCode(item);
+  const override = NAME_OVERRIDES[code];
+  if (override) return override;
   const p = PARAMETERS.find((x) => x.code === item.parameter);
+  // Функцгүй код: PU → "Насос"
+  if (p && isStandaloneCode(p.code)) return mainWord(p.label).replace(/\s*\(.*\)$/, "");
   const f = FUNCTIONS.find((x) => x.code === item.function_code);
-  if (!p || !f) return isaCode(item);
-  // X (Бусад / Ерөнхий) параметрт функцийн нэр л утга агуулна: XV → "Клапан"
+  if (!p || !f) return code;
+  // X (Бусад / Ерөнхий) параметрт функцийн нэр л утга агуулна: XV → "Хаалт", XVA → "Актуатор"
   if (p.code === "X") return mainWord(f.label);
   return `${mainWord(p.label)} · ${mainWord(f.label).toLowerCase()}`;
 }
