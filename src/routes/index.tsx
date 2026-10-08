@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 const PAGE_SIZE = 50;
 const LIST_STATE_KEY = "equipment-list-state";
 import {
+  CircleHelp,
   ClipboardPlus,
   Download,
   Factory,
@@ -93,6 +94,21 @@ export const Route = createFileRoute("/")({
 });
 
 const ALL = "__all__";
+
+/**
+ * Хайлтын мөрийг задлана: зай = бүгд таарах (БА), таслал = аль нэг бүлэг (ЭСВЭЛ),
+ * хашилт доторх үгс нэг нэр томьёо. Жишээ: `KSI PIT 2015, IFO "ball mill"`
+ * → [["ksi","pit","2015"], ["ifo","ball mill"]]
+ */
+function parseSearch(q: string): string[][] {
+  return q
+    .toLowerCase()
+    .split(",")
+    .map((group) => [...group.matchAll(/"([^"]+)"|(\S+)/g)].map((m) => (m[1] ?? m[2] ?? "").trim()).filter(Boolean))
+    .filter((group) => group.length > 0);
+}
+
+const SECTION_BY_CODE = new Map(SECTIONS.map((s) => [s.code.toLowerCase(), s.code as string]));
 type ViewMode = "register" | "inventory";
 
 function Index() {
@@ -194,34 +210,50 @@ function Index() {
   });
 
 
+  // Мөр бүрийн хайх текстийг нэг удаа бэлдэнэ (товчлуур дарах бүрт дахин бүтээхгүй)
+  const haystacks = useMemo(
+    () =>
+      new Map(
+        items.map((item) => [
+          item.id,
+          [
+            item.tag_name,
+            item.asset_serial,
+            item.factory_serial,
+            item.model,
+            item.manufacturer,
+            item.main_equipment,
+            item.main_equipment_name,
+            isaCode(item),
+            parameterLabel(item.parameter),
+            sectionLabel(item.section),
+            item.notes,
+          ]
+            .filter(Boolean)
+            .join(" \u0001 ")
+            .toLowerCase(),
+        ]),
+      ),
+    [items],
+  );
+
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const sectionHit = SECTIONS.find(
-      (s) => q && (s.code.toLowerCase() === q || s.label.toLowerCase().split("—")[1]?.trim().includes(q)),
-    );
+    const groups = parseSearch(search);
+    // Хэсгийн код (KSI, RO…) яг таарахаар шүүнэ — "ro" нь Rosemount, Krohne-д таарахгүйн тулд
+    const termHits = (item: Equipment, term: string) => {
+      const sectionCode = SECTION_BY_CODE.get(term);
+      if (sectionCode) return item.section === sectionCode;
+      return (haystacks.get(item.id) ?? "").includes(term);
+    };
     return items.filter((item) => {
       if (unit !== ALL && item.unit !== unit) return false;
       if (section !== ALL && item.section !== section) return false;
       if (category !== ALL && item.category !== category) return false;
       if (parameter !== ALL && item.parameter !== parameter) return false;
-      if (!q) return true;
-      if (sectionHit) return item.section === sectionHit.code;
-      return [
-        item.tag_name,
-        item.asset_serial,
-        item.factory_serial,
-        item.model,
-        item.manufacturer,
-        item.main_equipment,
-        item.main_equipment_name,
-        isaCode(item),
-        parameterLabel(item.parameter),
-        item.notes,
-      ]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(q));
+      if (!groups.length) return true;
+      return groups.some((terms) => terms.every((term) => termHits(item, term)));
     });
-  }, [items, search, unit, section, category, parameter]);
+  }, [items, haystacks, search, unit, section, category, parameter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -371,9 +403,38 @@ function Index() {
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Tag, сериал, хэсэг, ISA код (PIT), модель, үйлдвэрлэгч"
-                  className="pl-9"
+                  placeholder="Tag, сериал, хэсэг, ISA код, модель… Жишээ: KSI PIT 2015"
+                  className="pl-9 pr-9"
                 />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Хайлтын заавар"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+                    >
+                      <CircleHelp className="size-4" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-80 space-y-2 text-xs">
+                    <p className="font-medium">Олон утгаар хайх</p>
+                    <p>
+                      <span className="font-mono">KSI PIT 2015</span> — зайгаар тусгаарласан бүх утга таарна (БА)
+                    </p>
+                    <p>
+                      <span className="font-mono">PIT, LIT</span> — таслалаар тусгаарласан аль нэг нь таарна (ЭСВЭЛ)
+                    </p>
+                    <p>
+                      <span className="font-mono">KSI PIT, IFO LIT</span> — хоёуланг хослуулж болно
+                    </p>
+                    <p>
+                      <span className="font-mono">"ball mill"</span> — хашилт доторх хэллэгийг бүтнээр нь хайна
+                    </p>
+                    <p className="text-muted-foreground">
+                      Хэсгийн код (KSI, RO…) зөвхөн тухайн хэсгийг шүүнэ. Том жижиг үсэг ялгахгүй.
+                    </p>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
             <FilterSelect value={unit} onChange={setUnit} placeholder="Бүх эрхлэгч">
