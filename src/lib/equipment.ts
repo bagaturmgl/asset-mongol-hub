@@ -37,6 +37,7 @@ export const SECTIONS = [
   { code: "FSO", label: "FSO — Шүүн хатаах" },
   { code: "RO", label: "RO — Урвалжийн бэлтгэх" },
   { code: "PNS", label: "PNS — Хаягдлын шахуургын" },
+  { code: "RIP", label: "RIP — Хадгалах байр" }, // зөвхөн MNU эрхлэгчид
 ] as const;
 
 export const SUB_SECTIONS: Record<string, { code: string; label: string }[]> = {
@@ -76,6 +77,7 @@ export const SUB_SECTIONS: Record<string, { code: string; label: string }[]> = {
   ],
   RO: [{ code: "0", label: "0" }],
   PNS: [{ code: "0", label: "0" }],
+  RIP: [{ code: "ST", label: "Storage" }],
 };
 export const MAIN_EQUIPMENTS = ["M1", "M2", "M3", "M4", "M5"] as const;
 
@@ -112,7 +114,31 @@ export const PARAMETERS = [
 export const STANDALONE_CODES: Record<string, "S" | "C" | "A"> = { PU: "A" };
 
 export function isStandaloneCode(code: string | null | undefined): boolean {
-  return !!code && code in STANDALONE_CODES;
+  return !!code && (code in STANDALONE_CODES || MNU_STANDALONE.includes(code));
+}
+
+/* ---------- MNU (УТХ) эрхлэгч ----------
+ * Параметрийн оронд "төхөөрөмж" сонгоно, функцийн жагсаалт хэвээр, ерөнхий бүлэг байхгүй.
+ * RIP (хадгалах байр) хэсэг зөвхөн MNU-д харагдана. */
+export const MNU_UNIT = "MNU";
+export const MNU_ONLY_SECTIONS: string[] = ["RIP"];
+export const MNU_DEVICES = [
+  { code: "REC", label: "REC — Цацрагийн үүсгүүр ба сав" },
+  { code: "RD", label: "RD — Цөмийн хэмжүүрийн детектор" },
+  { code: "RL", label: "RL — Microwave" },
+  { code: "A", label: "A — Анализатор" },
+  { code: "V", label: "V — Чичиргээ / акустик анализатор" },
+] as const;
+/** Функцгүй MNU төхөөрөмж — Tag-д бүтэн кодоороо орно (REC001). */
+export const MNU_STANDALONE: string[] = ["REC"];
+
+export function isMnu(unit: string | null | undefined): boolean {
+  return unit === MNU_UNIT;
+}
+
+/** Эрхлэгчид харагдах хэсгүүд: RIP зөвхөн MNU-д. */
+export function sectionsForUnit(unit: string | null | undefined) {
+  return isMnu(unit) ? [...SECTIONS] : SECTIONS.filter((s) => !MNU_ONLY_SECTIONS.includes(s.code));
 }
 
 /** Үйлдвэрлэгчээс хамаарах ISA кодын анхдагч утга (жижиг үсгээр түлхүүрлэнэ). */
@@ -166,12 +192,19 @@ export function groupOfFunction(fn: string): "S" | "C" | "A" {
 export function groupOf(
   parameter: string | null | undefined,
   fn: string | null | undefined,
-): "S" | "C" | "A" {
-  if (isStandaloneCode(parameter)) return STANDALONE_CODES[parameter as string]!;
+  unit?: string | null,
+): "S" | "C" | "A" | "" {
+  if (isMnu(unit)) return ""; // MNU-д ерөнхий бүлэг байхгүй
+  if (parameter && parameter in STANDALONE_CODES) return STANDALONE_CODES[parameter]!;
   return groupOfFunction(fn ?? "");
 }
 
-export function parameterLabel(code: string | null) {
+/** MNU-д "төхөөрөмж"-ийн нэрийг, бусад эрхлэгчид параметрийн нэрийг буцаана. */
+export function parameterLabel(code: string | null, unit?: string | null) {
+  if (isMnu(unit)) {
+    const device = MNU_DEVICES.find((d) => d.code === code);
+    if (device) return device.label;
+  }
   return PARAMETERS.find((p) => p.code === code)?.label ?? code ?? "—";
 }
 
@@ -201,7 +234,7 @@ export function nextAssetSerial(section: string, existing: (string | null)[]) {
 export const STATUSES = [
   { code: "active", label: "Ажиллаж байна" },
   { code: "maintenance", label: "Засварт" },
-  { code: "inactive", label: "Ашиглалтгүй" },
+  { code: "inactive", label: "Нөөц" },
 ] as const;
 
 export function statusLabel(code: string) {
@@ -282,7 +315,7 @@ export function toCsv(rows: Equipment[]) {
     "Үндсэн тоног төхөөрөмж",
     "Тоног төхөөрөмжийн нэр",
     "ISA код",
-    "Параметр",
+    "Параметр / Төхөөрөмж",
     "Функц",
     "Ерөнхий бүлэг",
     "Байрлалын дугаар",
@@ -306,7 +339,7 @@ export function toCsv(rows: Equipment[]) {
       r.main_equipment,
       r.main_equipment_name,
       isaCode(r),
-      parameterLabel(r.parameter),
+      parameterLabel(r.parameter, r.unit),
       functionLabel(r.function_code),
       categoryLabel(r.category),
       r.sequence,
