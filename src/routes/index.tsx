@@ -62,6 +62,7 @@ import {
   PARAMETERS,
   isaCode,
   parameterLabel,
+  MNU_DEVICES,
   SECTIONS,
   UNITS,
   appendMaintenance,
@@ -225,7 +226,7 @@ function Index() {
             item.main_equipment,
             item.main_equipment_name,
             isaCode(item),
-            parameterLabel(item.parameter),
+            parameterLabel(item.parameter, item.unit),
             sectionLabel(item.section),
             item.notes,
           ]
@@ -462,6 +463,12 @@ function Index() {
               {PARAMETERS.map((p) => (
                 <SelectItem key={p.code} value={p.code}>
                   {p.label}
+                </SelectItem>
+              ))}
+              {/* MNU-ийн төхөөрөмжүүд (A, V нь дээрх параметртэй ижил код тул давхардуулахгүй) */}
+              {MNU_DEVICES.filter((d) => !PARAMETERS.some((p) => p.code === d.code)).map((d) => (
+                <SelectItem key={d.code} value={d.code}>
+                  {d.label} (MNU)
                 </SelectItem>
               ))}
             </FilterSelect>
