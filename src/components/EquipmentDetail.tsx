@@ -93,12 +93,15 @@ export function EquipmentDetail({
                       : item.main_equipment}
                   </Row>
                   <Row label="ISA код">
-                    <span className="font-mono">{isaCode(item)}</span> · {categoryLabel(item.category)}
+                    <span className="font-mono">{isaCode(item)}</span>
+                    {item.category ? ` · ${categoryLabel(item.category)}` : ""}
                   </Row>
                   <Row label="Хөрөнгийн сериал">
                     <span className="font-mono">{item.asset_serial || "—"}</span>
                   </Row>
-                  <Row label="Параметр">{parameterLabel(item.parameter)}</Row>
+                  <Row label={item.unit === "MNU" ? "Төхөөрөмж" : "Параметр"}>
+                    {parameterLabel(item.parameter, item.unit)}
+                  </Row>
                   <Row label="Функц">{functionLabel(item.function_code)}</Row>
                   <Row label="Байрлалын дугаар">{item.sequence}</Row>
                   <Row label="Үйлдвэрлэсэн он">{item.year}</Row>
