@@ -6,6 +6,12 @@ export const MAIN_EQUIPMENTS_BY_SUB_SECTION: Record<string, { code: string; labe
     { code: "CON3", label: "Conveyor #3" },
     { code: "CRU1", label: "Crusher #1" },
     { code: "CRU2", label: "Crusher #2" },
+    { code: "CON1", label: "Conveyor #1" }, // MNU-TT
+    { code: "CON2", label: "Conveyor #2" }, // MNU-TT
+    { code: "FD3", label: "Feeder #3" }, // MNU-TT
+    { code: "FD4", label: "Feeder #4" }, // MNU-TT
+    { code: "FD5", label: "Feeder #5" }, // MNU-TT
+    { code: "FD6", label: "Feeder #6" }, // MNU-TT
   ],
   "DTO|KMD": [
     { code: "CON12", label: "Conveyor #12" },
@@ -32,6 +38,8 @@ export const MAIN_EQUIPMENTS_BY_SUB_SECTION: Record<string, { code: string; labe
     { code: "CRU6", label: "Crusher #6" },
     { code: "CRU7", label: "Crusher #7" },
     { code: "CRU8", label: "Crusher #8" },
+    { code: "CON17", label: "Conveyor #17" }, // MNU-TT
+    { code: "CON9", label: "Conveyor #9" }, // MNU-TT
   ],
   "DTO|SKDR": [
     { code: "CON9", label: "Conveyor #9" },
@@ -54,6 +62,8 @@ export const MAIN_EQUIPMENTS_BY_SUB_SECTION: Record<string, { code: string; labe
     { code: "TP3", label: "Thickener pump #3" },
     { code: "TP4", label: "Thickener pump #4" },
     { code: "TP5", label: "Thickener pump #5" },
+    { code: "THK1", label: "Thickener #1" }, // MNU-TT
+    { code: "THK2", label: "Thickener #2" }, // MNU-TT
   ],
   "FSO|MC": [
     { code: "EO2", label: "Electric oven #2" },
@@ -134,6 +144,9 @@ export const MAIN_EQUIPMENTS_BY_SUB_SECTION: Record<string, { code: string; labe
     { code: "MIL14", label: "Mill #14" },
     { code: "RD", label: "Reagent doser" },
     { code: "SS", label: "Slurry sumps" },
+    { code: "PU127128", label: "Pump #127#128" }, // MNU-TT
+    { code: "PU131", label: "Pump #131" }, // MNU-TT
+    { code: "PU132", label: "Pump #132" }, // MNU-TT
   ],
   "IFO|S3": [
     { code: "FC", label: "Flotation cells" },
@@ -141,6 +154,9 @@ export const MAIN_EQUIPMENTS_BY_SUB_SECTION: Record<string, { code: string; labe
     { code: "MIL16", label: "Mill #16" },
     { code: "RD", label: "Reagent doser" },
     { code: "SS", label: "Slurry sumps" },
+    { code: "PU8182", label: "Pump #81#82" }, // MNU-TT
+    { code: "PU85", label: "Pump #85" }, // MNU-TT
+    { code: "PU86", label: "Pump #86" }, // MNU-TT
   ],
   "IFO|S4": [
     { code: "FC", label: "Flotation cells" },
@@ -155,6 +171,10 @@ export const MAIN_EQUIPMENTS_BY_SUB_SECTION: Record<string, { code: string; labe
     { code: "MIL24", label: "Mill #24" },
     { code: "RD", label: "Reagent doser" },
     { code: "SS", label: "Slurry sumps" },
+    { code: "PU153AB", label: "Pump #153AB" }, // MNU-TT
+    { code: "PU154AB", label: "Pump #154AB" }, // MNU-TT
+    { code: "PU155A", label: "Pump #155A" }, // MNU-TT
+    { code: "PU155B", label: "Pump #155B" }, // MNU-TT
   ],
   "IFO|S6": [
     { code: "FC", label: "Flotation cells" },
@@ -198,6 +218,8 @@ export const MAIN_EQUIPMENTS_BY_SUB_SECTION: Record<string, { code: string; labe
     { code: "SIL1", label: "Silo #1" },
     { code: "SIL2", label: "Silo #2" },
     { code: "WAT", label: "Water" },
+    { code: "FD3", label: "Feeder #3" }, // MNU-TT
+    { code: "FD4", label: "Feeder #4" }, // MNU-TT
   ],
   "KSI|S2": [
     { code: "BD", label: "Ball doser" },
@@ -216,6 +238,9 @@ export const MAIN_EQUIPMENTS_BY_SUB_SECTION: Record<string, { code: string; labe
     { code: "SIL3", label: "Silo #3" },
     { code: "SIL4", label: "Silo #4" },
     { code: "WAT", label: "Water" },
+    { code: "FD5", label: "Feeder #5" }, // MNU-TT
+    { code: "FD6", label: "Feeder #6" }, // MNU-TT
+    { code: "HYD2223", label: "HydroCyclone #22#23" }, // MNU-TT
   ],
   "KSI|S3": [
     { code: "BM6", label: "Ball Mill #6" },
@@ -240,6 +265,8 @@ export const MAIN_EQUIPMENTS_BY_SUB_SECTION: Record<string, { code: string; labe
     { code: "VS1", label: "Vibrating screen #1" },
     { code: "VS2", label: "Vibrating screen #2" },
     { code: "WAT", label: "Water" },
+    { code: "FD79", label: "Feeder #7#9" }, // MNU-TT
+    { code: "FD810", label: "Feeder #8#10" }, // MNU-TT
   ],
   "KSI|S4": [
     { code: "BD", label: "Ball doser" },
@@ -267,6 +294,11 @@ export const MAIN_EQUIPMENTS_BY_SUB_SECTION: Record<string, { code: string; labe
     { code: "VS1", label: "Vibrating screen #1" },
     { code: "VS2", label: "Vibrating screen #2" },
     { code: "WAT", label: "Water" },
+    { code: "FD11", label: "Feeder #11" }, // MNU-TT
+    { code: "FD12", label: "Feeder #12" }, // MNU-TT
+    { code: "FD13", label: "Feeder #13" }, // MNU-TT
+    { code: "FD14", label: "Feeder #14" }, // MNU-TT
+    { code: "HYD3031", label: "HydroCyclone #30#31" }, // MNU-TT
   ],
   "PNS|0": [
     { code: "RWP1", label: "Recirculating water pipeline #1" },
@@ -293,6 +325,21 @@ export const MAIN_EQUIPMENTS_BY_SUB_SECTION: Record<string, { code: string; labe
     { code: "TAN10", label: "Tank #10" },
     { code: "TAN11", label: "Tank #11" },
     { code: "TAN12", label: "Tank #12" },
+  ],
+  "RIP|ST": [
+    { code: "RIPG", label: "RIPgroup" }, // MNU-TT
+    { code: "WELL1", label: "Худаг 1" }, // MNU-TT
+    { code: "WELL10", label: "Худаг 10" }, // MNU-TT
+    { code: "WELL11", label: "Худаг 11" }, // MNU-TT
+    { code: "WELL12", label: "Худаг 12" }, // MNU-TT
+    { code: "WELL24", label: "Худаг 24" }, // MNU-TT
+    { code: "WELL25", label: "Худаг 25" }, // MNU-TT
+    { code: "WELL27", label: "Худаг 27" }, // MNU-TT
+    { code: "WELL5", label: "Худаг 5" }, // MNU-TT
+    { code: "WELL6", label: "Худаг 6" }, // MNU-TT
+    { code: "WELL7", label: "Худаг 7" }, // MNU-TT
+    { code: "WELL8", label: "Худаг 8" }, // MNU-TT
+    { code: "WELL9", label: "Худаг 9" }, // MNU-TT
   ],
 };
 
