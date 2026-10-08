@@ -2,8 +2,10 @@ import {
   type Equipment,
   FUNCTIONS,
   PARAMETERS,
+  MNU_DEVICES,
   STANDALONE_CODES,
   groupOfFunction,
+  isMnu,
   isStandaloneCode,
   isaCode,
 } from "@/lib/equipment";
@@ -25,20 +27,32 @@ export const DEVICE_GROUPS: { code: DeviceGroup; label: string; rule: string }[]
     label: "Гүйцэтгэх механизм",
     rule: "Функц V, VA, Y ба PU — хаалт, актуатор, соленойд, позиционер, насос",
   },
-  { code: "radiation", label: "Цацрагийн тоног төхөөрөмж", rule: "Параметр R — цацраг, радиометр" },
-  { code: "analyzer", label: "Анализатор", rule: "Параметр A — шинжилгээ, pH, Ca%, чийгшил" },
+  {
+    code: "radiation",
+    label: "Цацрагийн тоног төхөөрөмж",
+    rule: "Параметр R, MNU-ийн REC, RD, RL — цацраг, радиометр, үүсгүүр, детектор",
+  },
+  {
+    code: "analyzer",
+    label: "Анализатор",
+    rule: "Параметр A, MNU-ийн A, V — шинжилгээ, pH, Ca%, чийгшил, анализатор",
+  },
 ];
 
 export function deviceGroupOf(
-  item: Pick<Equipment, "category" | "parameter" | "function_code">,
+  item: Pick<Equipment, "category" | "parameter" | "function_code"> & { unit?: string | null },
 ): DeviceGroup {
+  // MNU (УТХ): ерөнхий бүлэггүй — төхөөрөмжөөр нь ангилна
+  if (isMnu(item.unit))
+    return item.parameter === "A" || item.parameter === "V" ? "analyzer" : "radiation";
   // Хадгалсан category хуучирсан байж болно (позиционер өмнө нь "C" байсан),
   // тиймээс функц байвал бүлгийг түүнээс дахин тооцно.
-  const category = isStandaloneCode(item.parameter)
-    ? STANDALONE_CODES[item.parameter as string]
-    : item.function_code
-      ? groupOfFunction(item.function_code)
-      : item.category;
+  const category =
+    item.parameter && item.parameter in STANDALONE_CODES
+      ? STANDALONE_CODES[item.parameter]
+      : item.function_code
+        ? groupOfFunction(item.function_code)
+        : item.category;
   if (category === "A") return "actuator";
   if (item.parameter === "R") return "radiation";
   if (item.parameter === "A") return "analyzer";
@@ -81,8 +95,10 @@ function typeName(item: Equipment): string {
   const code = isaCode(item);
   const override = NAME_OVERRIDES[code];
   if (override) return override;
-  const p = PARAMETERS.find((x) => x.code === item.parameter);
-  // Функцгүй код: PU → "Насос"
+  const p = isMnu(item.unit)
+    ? MNU_DEVICES.find((x) => x.code === item.parameter)
+    : PARAMETERS.find((x) => x.code === item.parameter);
+  // Функцгүй код: PU → "Насос", REC → "Цацрагийн үүсгүүр ба сав"
   if (p && isStandaloneCode(p.code)) return mainWord(p.label).replace(/\s*\(.*\)$/, "");
   const f = FUNCTIONS.find((x) => x.code === item.function_code);
   if (!p || !f) return code;
