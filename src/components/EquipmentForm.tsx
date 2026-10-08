@@ -32,6 +32,9 @@ import {
   UNITS,
   vendorIsaDefault,
   modelIsaDefault,
+  MNU_DEVICES,
+  isMnu,
+  sectionsForUnit,
 } from "@/lib/equipment";
 import { mainEquipmentOptions } from "@/lib/main-equipments";
 
@@ -239,7 +242,9 @@ export function EquipmentForm({
       }),
     [form, standalone],
   );
-  const group = groupOf(form.parameter, form.function_code);
+  // MNU: параметрийн оронд "төхөөрөмж", ерөнхий бүлэг байхгүй
+  const mnu = isMnu(form.unit);
+  const group = groupOf(form.parameter, form.function_code, form.unit);
   const ready = Boolean(
     form.unit && form.section && form.sub_section && form.main_equipment && form.parameter && (standalone || form.function_code),
   );
@@ -260,7 +265,21 @@ export function EquipmentForm({
 
   // Хэрэглэгч зөвхөн өөрт оноосон хэсгүүдээ сонгоно (админ бүгдийг)
   const auth = useAuth();
-  const allowedSections = auth.isAdmin ? SECTIONS : SECTIONS.filter((s) => auth.sections.includes(s.code));
+  const unitSections = sectionsForUnit(form.unit); // RIP зөвхөн MNU-д
+  const allowedSections = auth.isAdmin ? unitSections : unitSections.filter((s) => auth.sections.includes(s.code));
+
+  // Эрхлэгч солиход: MNU ↔ бусад хооронд параметр/төхөөрөмж өөр тул цэвэрлэнэ; RIP зөвхөн MNU-д
+  const onUnitChange = (unit: string) =>
+    setForm((prev) => {
+      const switching = isMnu(prev.unit) !== isMnu(unit);
+      const keepSection = sectionsForUnit(unit).some((s) => s.code === prev.section);
+      return {
+        ...prev,
+        unit,
+        ...(switching ? { parameter: "", function_code: "" } : {}),
+        ...(keepSection ? {} : { section: "", sub_section: "", main_equipment: "", main_equipment_name: "" }),
+      };
+    });
 
   const onSectionChange = (section: string) => {
     if (!section || section === form.section) return;
@@ -349,7 +368,7 @@ export function EquipmentForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       <Step n={1} title="Байршил">
         <Field label="Үйлчилгээ эрхлэгч">
-          <Picker value={form.unit} onChange={(v) => v && set("unit", v)}>
+          <Picker value={form.unit} onChange={(v) => v && onUnitChange(v)}>
             {unitOptions.map((u) => (
               <SelectItem key={u.code} value={u.code}>{u.label}</SelectItem>
             ))}
@@ -397,15 +416,15 @@ export function EquipmentForm({
         )}
       </Step>
 
-      <Step n={2} title="Параметр ба функц (ISA-5.1)">
-        <Field label="Параметр">
+      <Step n={2} title={mnu ? "Төхөөрөмж ба функц" : "Параметр ба функц (ISA-5.1)"}>
+        <Field label={mnu ? "Төхөөрөмж" : "Параметр"}>
           <Picker
             value={form.parameter}
             onChange={(v) =>
               v && setForm((prev) => ({ ...prev, parameter: v, function_code: isStandaloneCode(v) ? "" : prev.function_code }))
             }
           >
-            {PARAMETERS.map((p) => (
+            {(mnu ? MNU_DEVICES : PARAMETERS).map((p) => (
               <SelectItem key={p.code} value={p.code}>{p.label}</SelectItem>
             ))}
           </Picker>
@@ -421,9 +440,11 @@ export function EquipmentForm({
             </Picker>
           )}
         </Field>
-        <Field label="Ерөнхий бүлэг">
-          <Input value={standalone || form.function_code ? categoryLabel(group) : ""} readOnly className="bg-muted/50" />
-        </Field>
+        {!mnu && (
+          <Field label="Ерөнхий бүлэг">
+            <Input value={standalone || form.function_code ? categoryLabel(group) : ""} readOnly className="bg-muted/50" />
+          </Field>
+        )}
         <Field label="Байрлалын дугаар">
           <Input
             value={form.sequence}
