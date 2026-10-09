@@ -35,6 +35,7 @@ import {
   MNU_DEVICES,
   isMnu,
   sectionsForUnit,
+  canonicalVendor,
 } from "@/lib/equipment";
 import { mainEquipmentOptions } from "@/lib/main-equipments";
 
@@ -197,16 +198,16 @@ export function EquipmentForm({
   const manufacturers = useMemo(() => {
     const map = new Map<string, string>();
     for (const i of items) {
-      const v = i.manufacturer?.trim();
+      const v = canonicalVendor(i.manufacturer);
       if (v && !map.has(v.toLowerCase())) map.set(v.toLowerCase(), v);
     }
     return [...map.values()].sort((a, b) => a.localeCompare(b));
   }, [items]);
   const models = useMemo(() => {
-    const mf = form.manufacturer.trim().toLowerCase();
+    const mf = canonicalVendor(form.manufacturer)?.toLowerCase() ?? "";
     const set = new Set<string>();
     for (const i of items) {
-      if (mf && i.manufacturer?.trim().toLowerCase() !== mf) continue;
+      if (mf && canonicalVendor(i.manufacturer)?.toLowerCase() !== mf) continue;
       const v = i.model?.trim();
       if (v) set.add(v);
     }
@@ -337,7 +338,7 @@ export function EquipmentForm({
       main_equipment_name: form.main_equipment_name.trim() || null,
       tag_name: tag,
       asset_serial: form.asset_serial.trim() || null,
-      manufacturer: form.manufacturer.trim() || null,
+      manufacturer: canonicalVendor(form.manufacturer), // "SIEMENS" → "Siemens"
       model: form.model.trim() || null,
       factory_serial: form.factory_serial.trim() || null,
       notes: form.notes.trim() || null,
