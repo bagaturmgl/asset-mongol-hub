@@ -82,6 +82,17 @@ export function DeviceGroupPanel({
               Нас жилээр, үйлдвэрлэсэн оноос тооцов.
               {group.unknownAge > 0 && ` Он тодорхойгүй: ${group.unknownAge}.`}
             </p>
+
+            <h3 className="mt-5 text-sm font-medium">Үйлдвэрлэгчээр</h3>
+            {/* 7 мөр + тайлбарын өндрийг тогтмол байлгаснаар баганын насжилтын диаграмууд нэг түвшинд эгнэнэ */}
+            <div className="md:min-h-[290px]">
+              <VendorList rows={group.vendors} label={group.label} />
+              {group.unknownVendor > 0 && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Үйлдвэрлэгч тодорхойгүй: {group.unknownVendor}.
+                </p>
+              )}
+            </div>
           </div>
         </>
       )}
@@ -104,6 +115,39 @@ function TypeList({ rows, label }: { rows: TypeRow[]; label: string }) {
             <div className="flex items-baseline gap-2 text-xs">
               <span className="w-12 shrink-0 font-mono font-semibold">{r.code}</span>
               <span className="min-w-0 flex-1 truncate text-muted-foreground">{r.name}</span>
+              <span className="shrink-0 text-sm font-medium tabular-nums">{r.count}</span>
+            </div>
+            <div className="mt-1 h-1.5 rounded-full bg-muted" aria-hidden>
+              <div
+                className={`h-full rounded-full ${other ? "bg-muted-foreground/60" : "bg-primary"}`}
+                style={{ width: `${(r.count / max) * 100}%` }}
+              />
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+/** Үйлдвэрлэгчийн жагсаалт: нэр, тоо, харьцангуй зурвас; "Бусад" нь үлдсэн үйлдвэрлэгчдийн нийлбэр. */
+function VendorList({ rows, label }: { rows: TypeRow[]; label: string }) {
+  if (!rows.length)
+    return <p className="mt-2 text-xs text-muted-foreground">Үйлдвэрлэгчийн мэдээлэл алга.</p>;
+  const max = Math.max(1, ...rows.map((r) => r.count));
+  return (
+    <ul className="mt-2 space-y-2" aria-label={`${label}, үйлдвэрлэгчээр`}>
+      {rows.map((r) => {
+        const other = r.code === "Бусад";
+        return (
+          <li key={r.code} title={other ? `Бусад ${r.name}: ${r.count}` : `${r.code}: ${r.count}`}>
+            <div className="flex items-baseline gap-2 text-xs">
+              <span
+                className={`min-w-0 flex-1 truncate ${other ? "text-muted-foreground" : "font-medium"}`}
+              >
+                {r.code}
+                {other && <span className="ml-1 font-normal">({r.name})</span>}
+              </span>
               <span className="shrink-0 text-sm font-medium tabular-nums">{r.count}</span>
             </div>
             <div className="mt-1 h-1.5 rounded-full bg-muted" aria-hidden>
