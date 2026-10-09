@@ -282,6 +282,76 @@ export function appendMaintenance(text: string | null, date: string, note: strin
   return text && text.trim() ? `${text.trim()}\n${line}` : line;
 }
 
+/* ---------- Үйлдвэрлэгчийн нэрийн нэгдсэн хэлбэр ----------
+ * Нэрийг "Siemens", "Yokogawa" шиг нэг хэлбэрээр бичнэ; товчилсон нэр (SMC, ABB, IFM…) болон
+ * KITZ, WIKA, JUMO, HYDAC, SICK том үсгээр.
+ * Түлхүүр: жижиг үсэг, зай ба тэмдэгтгүй. Энд байхгүй нэрийг зөвхөн илүү зайг цэвэрлээд хадгална. */
+const VENDOR_CANONICAL: Record<string, string> = {
+  siemens: "Siemens",
+  yokogawa: "Yokogawa",
+  festo: "Festo",
+  kitz: "KITZ",
+  allenbradley: "Allen Bradley",
+  grundfos: "Grundfos",
+  krohne: "Krohne",
+  kronhe: "Krohne",
+  bray: "Bray",
+  schenck: "Schenck",
+  schenk: "Schenck",
+  bronkhorst: "Bronkhorst",
+  raytek: "Raytek",
+  jumo: "JUMO",
+  hydac: "HYDAC",
+  topworx: "TopWorx",
+  eriez: "Eriez",
+  airtac: "Airtac",
+  wika: "WIKA",
+  sunyeh: "Sun Yeh",
+  flowserve: "Flowserve",
+  univer: "Univer",
+  autonics: "Autonics",
+  stauff: "Stauff",
+  bailey: "Bailey",
+  ctemp: "C-Temp",
+  jindex: "Jindex",
+  xomox: "Xomox",
+  westlock: "Westlock",
+  ningbosmart: "Ningbo Smart",
+  rosemount: "Rosemount",
+  samson: "Samson",
+  chelic: "Chelic",
+  bernardcontrols: "Bernard Controls",
+  dunkermotor: "Dunker Motor",
+  tyco: "Tyco",
+  sick: "SICK",
+  vega: "Vega",
+  elemer: "Элемер",
+  элемер: "Элемер",
+  endresshauser: "Endress+Hauser",
+  pepperlfuchs: "Pepperl+Fuchs",
+  iminorgren: "IMI Norgren",
+  smc: "SMC",
+  abb: "ABB",
+  ifm: "IFM",
+  asco: "ASCO",
+  ema: "EMA",
+  macvalves: "MAC Valves",
+  csinstruments: "CS Instruments",
+  thermofisher: "Thermo Fisher",
+  metso: "Metso",
+};
+
+export function vendorKey(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9а-яёөү]/g, "");
+}
+
+/** Үйлдвэрлэгчийн нэрийг нэгдсэн хэлбэрт оруулна ("SIEMENS" → "Siemens"). Хоосон бол null. */
+export function canonicalVendor(name: string | null | undefined): string | null {
+  const trimmed = (name ?? "").replace(/\s+/g, " ").trim();
+  if (!trimmed) return null;
+  return VENDOR_CANONICAL[vendorKey(trimmed)] ?? trimmed;
+}
+
 export function buildTag(v: {
   unit: string;
   section: string;
