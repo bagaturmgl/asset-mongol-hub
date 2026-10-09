@@ -8,6 +8,7 @@ import {
   isMnu,
   isStandaloneCode,
   isaCode,
+  canonicalVendor,
 } from "@/lib/equipment";
 
 /**
@@ -133,46 +134,20 @@ export const TOP_TYPES = 8;
 /** Үйлдвэрлэгчийн жагсаалтад нэрээр нь харуулах тоо ("Бусад"-аас гадна). */
 export const TOP_VENDORS = 6;
 
-/**
- * Нэг үйлдвэрлэгчийн өөр өөр бичлэгийг нэгтгэх түлхүүр: "SIEMENS" = "Siemens",
- * "Allen bradley" = "Allen Bradley", "Endress hauser" = "Endress+Hauser" г.м.
- */
-const VENDOR_ALIASES: Record<string, string> = {
-  schenk: "schenck",
-  хятад: "china",
-  kronhe: "krohne",
-};
-function vendorKey(name: string): string {
-  const k = name.toLowerCase().replace(/[^a-z0-9а-яёөү]/g, "");
-  return VENDOR_ALIASES[k] ?? k;
-}
-
+/** Нэг үйлдвэрлэгчийн өөр бичлэгүүдийг ("SIEMENS", "Siemens") нэгдсэн нэрээр нь тоолно. */
 function vendorBreakdown(rows: Equipment[]): { vendors: TypeRow[]; unknownVendor: number } {
-  const byKey = new Map<string, { count: number; spellings: Map<string, number> }>();
+  const counts = new Map<string, number>();
   let unknownVendor = 0;
   for (const item of rows) {
-    const raw = (item.manufacturer ?? "").trim();
-    const key = raw ? vendorKey(raw) : "";
-    if (!key) {
+    const name = canonicalVendor(item.manufacturer);
+    if (!name || ["тодруулах", "тодорхойгүй"].includes(name.toLowerCase())) {
       unknownVendor += 1;
       continue;
     }
-    const entry = byKey.get(key) ?? { count: 0, spellings: new Map<string, number>() };
-    entry.count += 1;
-    entry.spellings.set(raw, (entry.spellings.get(raw) ?? 0) + 1);
-    byKey.set(key, entry);
+    counts.set(name, (counts.get(name) ?? 0) + 1);
   }
-  // Харуулах нэр: том үсэг агуулсан хэлбэрийг давуу үзэж, дотроос нь хамгийн олон бичигдсэнийг
-  const displayName = (spellings: Map<string, number>) =>
-    [...spellings.entries()].sort(
-      (a, b) => Number(/\p{Lu}/u.test(b[0])) - Number(/\p{Lu}/u.test(a[0])) || b[1] - a[1],
-    )[0]![0];
-  const all = [...byKey.values()]
-    .map((e) => ({
-      code: displayName(e.spellings),
-      name: "",
-      count: e.count,
-    }))
+  const all = [...counts.entries()]
+    .map(([code, count]) => ({ code, name: "", count }))
     .sort((a, b) => b.count - a.count || a.code.localeCompare(b.code));
   const vendors =
     all.length > TOP_VENDORS + 1
