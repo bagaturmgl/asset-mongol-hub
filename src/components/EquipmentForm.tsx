@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Copy, Loader2, Plus, RotateCcw, Save, Sparkles } from "lucide-react";
+import { AlertTriangle, Copy, Loader2, Plus, RotateCcw, Save, Sparkles, Radiation} from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,8 @@ import {
   isMnu,
   sectionsForUnit,
   canonicalVendor,
+  ISOTOPES,
+  isRadiationSource,
 } from "@/lib/equipment";
 import { mainEquipmentOptions } from "@/lib/main-equipments";
 
@@ -53,6 +55,9 @@ type FormState = {
   manufacturer: string;
   model: string;
   factory_serial: string;
+  source_code: string;
+  source_serial: string;
+  isotope: string;
   status: string;
   notes: string;
   maintenance_history: string;
@@ -97,6 +102,9 @@ const emptyForm: FormState = {
   manufacturer: "",
   model: "",
   factory_serial: "",
+  source_code: "",
+  source_serial: "",
+  isotope: "",
   status: "active",
   notes: "",
   maintenance_history: "",
@@ -142,6 +150,9 @@ export function EquipmentForm({
         manufacturer: editing.manufacturer ?? "",
         model: editing.model ?? "",
         factory_serial: editing.factory_serial ?? "",
+        source_code: editing.source_code ?? "",
+        source_serial: editing.source_serial ?? "",
+        isotope: editing.isotope ?? "",
         status: editing.status,
         notes: editing.notes ?? "",
         maintenance_history: editing.maintenance_history ?? "",
@@ -246,6 +257,7 @@ export function EquipmentForm({
   // MNU: параметрийн оронд "төхөөрөмж", ерөнхий бүлэг байхгүй
   const mnu = isMnu(form.unit);
   const group = groupOf(form.parameter, form.function_code, form.unit);
+  const sourceFields = isRadiationSource(form);
   const ready = Boolean(
     form.unit && form.section && form.sub_section && form.main_equipment && form.parameter && (standalone || form.function_code),
   );
@@ -341,6 +353,10 @@ export function EquipmentForm({
       manufacturer: canonicalVendor(form.manufacturer), // "SIEMENS" → "Siemens"
       model: form.model.trim() || null,
       factory_serial: form.factory_serial.trim() || null,
+      // Цацрагийн үүсгүүрийн мэдээлэл зөвхөн MNU-ийн REC-д хадгалагдана
+      source_code: sourceFields ? form.source_code.trim() || null : null,
+      source_serial: sourceFields ? form.source_serial.trim() || null : null,
+      isotope: sourceFields ? form.isotope.trim() || null : null,
       notes: form.notes.trim() || null,
       maintenance_history: form.maintenance_history.trim() || null,
     };
@@ -535,6 +551,28 @@ export function EquipmentForm({
             ))}
           </Picker>
         </Field>
+        {sourceFields && (
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 sm:col-span-2 lg:col-span-4">
+            <p className="mb-3 flex items-center gap-2 text-sm font-semibold">
+              <Radiation className="size-4 text-primary" aria-hidden /> Үүсгүүр
+              <span className="font-normal text-muted-foreground">— савтайгаа хамт үйлдвэрлэгдсэн тул он нь дээрх "Үйлдвэрлэсэн он"</span>
+            </p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field label="Үүсгүүрийн код / төрөл">
+                <Input value={form.source_code} placeholder="ОХУ капсул" onChange={(e) => set("source_code", e.target.value)} />
+              </Field>
+              <Field label="Үүсгүүрийн сериал №">
+                <Input value={form.source_serial} placeholder="Т79" onChange={(e) => set("source_serial", e.target.value)} />
+              </Field>
+              <Field label="Изотоп">
+                <Input value={form.isotope} list="isotope-list" placeholder="Cs-137" onChange={(e) => set("isotope", e.target.value)} />
+                <datalist id="isotope-list">
+                  {ISOTOPES.map((iso) => <option key={iso} value={iso} />)}
+                </datalist>
+              </Field>
+            </div>
+          </div>
+        )}
       </Step>
 
       <div className="rounded-xl border border-primary/25 bg-primary/5 p-4">
