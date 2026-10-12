@@ -26,6 +26,7 @@ import {
   statusLabel,
   subSectionLabel,
   unitLabel,
+  isRadiationSource,
 } from "@/lib/equipment";
 
 export function EquipmentDetail({
@@ -108,6 +109,13 @@ export function EquipmentDetail({
                   <Row label="Үйлдвэрлэгч">{item.manufacturer || "—"}</Row>
                   <Row label="Модель">{item.model || "—"}</Row>
                   <Row label="Үйлдвэрийн сериал №">{item.factory_serial || "—"}</Row>
+                  {isRadiationSource(item) && (
+                    <>
+                      <Row label="Үүсгүүрийн код / төрөл">{item.source_code || "—"}</Row>
+                      <Row label="Үүсгүүрийн сериал №">{item.source_serial || "—"}</Row>
+                      <Row label="Изотоп">{item.isotope || "—"}</Row>
+                    </>
+                  )}
                   <div className="sm:col-span-2">
                     <Row label="Ашиглалтын явцын түүх">
                       {usage.length ? (
