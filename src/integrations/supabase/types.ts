@@ -20,6 +20,9 @@ export type Database = {
           category: string
           created_at: string
           factory_serial: string | null
+          isotope: string | null
+          source_code: string | null
+          source_serial: string | null
           function_code: string | null
           id: string
           main_equipment: string
@@ -44,6 +47,9 @@ export type Database = {
           category: string
           created_at?: string
           factory_serial?: string | null
+          isotope?: string | null
+          source_code?: string | null
+          source_serial?: string | null
           function_code?: string | null
           id?: string
           main_equipment: string
@@ -68,6 +74,9 @@ export type Database = {
           category?: string
           created_at?: string
           factory_serial?: string | null
+          isotope?: string | null
+          source_code?: string | null
+          source_serial?: string | null
           function_code?: string | null
           id?: string
           main_equipment?: string
