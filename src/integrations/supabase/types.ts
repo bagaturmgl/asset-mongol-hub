@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      controllers: {
+        Row: {
+          commissioned: string | null
+          created_at: string
+          ctype: string
+          id: string
+          io_ai: number | null
+          io_ao: number | null
+          io_di: number | null
+          io_do: number | null
+          ip: string | null
+          main_equipment: string | null
+          main_equipment_name: string | null
+          manufacturer: string | null
+          model: string | null
+          notes: string | null
+          section: string
+          status: string
+          sub_section: string | null
+          tag: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          commissioned?: string | null
+          created_at?: string
+          ctype: string
+          id?: string
+          io_ai?: number | null
+          io_ao?: number | null
+          io_di?: number | null
+          io_do?: number | null
+          ip?: string | null
+          main_equipment?: string | null
+          main_equipment_name?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          notes?: string | null
+          section: string
+          status?: string
+          sub_section?: string | null
+          tag: string
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          commissioned?: string | null
+          created_at?: string
+          ctype?: string
+          id?: string
+          io_ai?: number | null
+          io_ao?: number | null
+          io_di?: number | null
+          io_do?: number | null
+          ip?: string | null
+          main_equipment?: string | null
+          main_equipment_name?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          notes?: string | null
+          section?: string
+          status?: string
+          sub_section?: string | null
+          tag?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       equipment: {
         Row: {
           asset_serial: string | null
