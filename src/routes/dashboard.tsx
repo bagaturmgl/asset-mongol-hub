@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { Factory, LayoutDashboard, List, Loader2 } from "lucide-react";
+import { Cpu, Factory, LayoutDashboard, List, Loader2 } from "lucide-react";
 
 import { DeviceGroupPanel } from "@/components/DeviceGroupPanel";
 import { OfflineBanner } from "@/components/OfflineBanner";
@@ -58,6 +58,11 @@ function DashboardPage() {
             <span className={buttonVariants({ size: "sm" })} aria-current="page">
               <LayoutDashboard className="size-4" /> Хянах самбар
             </span>
+            <Button size="sm" variant="ghost" asChild>
+              <Link to="/controllers">
+                <Cpu className="size-4" /> DCS/PLC
+              </Link>
+            </Button>
           </nav>
         </div>
       </header>
