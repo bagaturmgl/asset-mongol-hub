@@ -16,6 +16,10 @@ export type Equipment = {
   manufacturer: string | null;
   model: string | null;
   factory_serial: string | null;
+  /** Цацрагийн үүсгүүр (MNU REC): код/төрөл, сериал, изотоп. Үүсгүүр ба сав хамт үйлдвэрлэгддэг тул он нь "year". */
+  source_code: string | null;
+  source_serial: string | null;
+  isotope: string | null;
   status: string;
   notes: string | null;
   maintenance_history: string | null;
@@ -135,6 +139,14 @@ export const MNU_STANDALONE: string[] = ["REC"];
 export function isMnu(unit: string | null | undefined): boolean {
   return unit === MNU_UNIT;
 }
+
+/** Цацрагийн үүсгүүр ба сав (MNU-ийн REC) — үүсгүүрийн талбартай. */
+export function isRadiationSource(r: { unit?: string | null; parameter?: string | null }): boolean {
+  return isMnu(r.unit) && r.parameter === "REC";
+}
+
+/** Изотопын санал болгох жагсаалт (үйлдвэрийн цөмийн хэмжүүрт түгээмэл). */
+export const ISOTOPES = ["Cs-137", "Co-60", "Am-241", "Am-241/Be", "Cd-109", "Kr-85", "Sr-90"];
 
 /** Эрхлэгчид харагдах хэсгүүд: RIP зөвхөн MNU-д. */
 export function sectionsForUnit(unit: string | null | undefined) {
@@ -393,6 +405,9 @@ export function toCsv(rows: Equipment[]) {
     "Үйлдвэрлэгч",
     "Модель",
     "Үйлдвэрийн сериал №",
+    "Үүсгүүрийн код / төрөл",
+    "Үүсгүүрийн сериал №",
+    "Изотоп",
     "Төлөв",
     "Ашиглалтын явцын түүх",
     "Засвар үйлчилгээний түүх",
@@ -417,6 +432,9 @@ export function toCsv(rows: Equipment[]) {
       r.manufacturer,
       r.model,
       r.factory_serial,
+      r.source_code,
+      r.source_serial,
+      r.isotope,
       statusLabel(r.status),
       r.notes,
       r.maintenance_history,
