@@ -119,6 +119,7 @@ export const MAIN_EQUIPMENTS_BY_SUB_SECTION: Record<string, { code: string; labe
     { code: "FC", label: "Flotation cells" },
     { code: "FC84", label: "Flotation cells #84" },
     { code: "SS", label: "Slurry sumps" },
+    { code: "VM1", label: "Vertimill #1" }, // DCS/PLC бүртгэл
   ],
   "IFO|NMS": [
     { code: "FC", label: "Flotation cells" },
@@ -243,6 +244,7 @@ export const MAIN_EQUIPMENTS_BY_SUB_SECTION: Record<string, { code: string; labe
     { code: "HYD2223", label: "HydroCyclone #22#23" }, // MNU-TT
   ],
   "KSI|S3": [
+    { code: "BD", label: "Ball doser" }, // DCS/PLC бүртгэл
     { code: "BM6", label: "Ball Mill #6" },
     { code: "CON80", label: "Conveyor #80" },
     { code: "CON81", label: "Conveyor #81" },
