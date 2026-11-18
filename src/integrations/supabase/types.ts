@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -89,11 +89,9 @@ export type Database = {
           category: string
           created_at: string
           factory_serial: string | null
-          isotope: string | null
-          source_code: string | null
-          source_serial: string | null
           function_code: string | null
           id: string
+          isotope: string | null
           main_equipment: string
           main_equipment_name: string | null
           maintenance_history: string | null
@@ -103,6 +101,8 @@ export type Database = {
           parameter: string | null
           section: string
           sequence: string
+          source_code: string | null
+          source_serial: string | null
           status: string
           sub_section: string
           subtype: string
@@ -116,11 +116,9 @@ export type Database = {
           category: string
           created_at?: string
           factory_serial?: string | null
-          isotope?: string | null
-          source_code?: string | null
-          source_serial?: string | null
           function_code?: string | null
           id?: string
+          isotope?: string | null
           main_equipment: string
           main_equipment_name?: string | null
           maintenance_history?: string | null
@@ -130,6 +128,8 @@ export type Database = {
           parameter?: string | null
           section: string
           sequence: string
+          source_code?: string | null
+          source_serial?: string | null
           status?: string
           sub_section: string
           subtype: string
@@ -143,11 +143,9 @@ export type Database = {
           category?: string
           created_at?: string
           factory_serial?: string | null
-          isotope?: string | null
-          source_code?: string | null
-          source_serial?: string | null
           function_code?: string | null
           id?: string
+          isotope?: string | null
           main_equipment?: string
           main_equipment_name?: string | null
           maintenance_history?: string | null
@@ -157,6 +155,8 @@ export type Database = {
           parameter?: string | null
           section?: string
           sequence?: string
+          source_code?: string | null
+          source_serial?: string | null
           status?: string
           sub_section?: string
           subtype?: string
