@@ -18,6 +18,29 @@ export type Controller = {
   io_ao: number | null;
   io_di: number | null;
   io_do: number | null;
+  io_pi: number | null;
+  /** Модулийн тоо төрөл бүрээр */
+  mod_ai: number | null;
+  mod_ao: number | null;
+  mod_di: number | null;
+  mod_do: number | null;
+  mod_pi: number | null;
+  /** Нэг модулийн сувгийн тоо төрөл бүрээр */
+  ch_ai: number | null;
+  ch_ao: number | null;
+  ch_di: number | null;
+  ch_do: number | null;
+  ch_pi: number | null;
+  /** Fieldbus: холбох боломжтой ТТ, холбогдсон ТТ, сигналын тоо */
+  pb_capacity: number | null;
+  pb_devices: number | null;
+  pb_signals: number | null;
+  mb_capacity: number | null;
+  mb_devices: number | null;
+  mb_signals: number | null;
+  eth_capacity: number | null;
+  eth_devices: number | null;
+  eth_signals: number | null;
   ip: string | null;
   status: string;
   notes: string | null;
@@ -55,8 +78,85 @@ export function nextControllerTag(prefix: string, existing: string[]) {
   return `${prefix}-${String(Math.max(0, ...used) + 1).padStart(2, "0")}`;
 }
 
-export const ioTotal = (c: Pick<Controller, "io_ai" | "io_ao" | "io_di" | "io_do">) =>
-  (c.io_ai ?? 0) + (c.io_ao ?? 0) + (c.io_di ?? 0) + (c.io_do ?? 0);
+/** Физик оролт/гаралтын төрлүүд: AI, AO, DI, DO, PI (импульсийн оролт) */
+export const IO_KINDS = [
+  { k: "ai", label: "AI" },
+  { k: "ao", label: "AO" },
+  { k: "di", label: "DI" },
+  { k: "do", label: "DO" },
+  { k: "pi", label: "PI" },
+] as const;
+export type IoKind = (typeof IO_KINDS)[number]["k"];
+
+/** Fieldbus протоколууд */
+export const FIELDBUS = [
+  { k: "pb", label: "PB", name: "Profibus" },
+  { k: "mb", label: "MB", name: "Modbus" },
+  { k: "eth", label: "ETH", name: "Ethernet" },
+] as const;
+export type FieldbusKind = (typeof FIELDBUS)[number]["k"];
+
+type IoFields = Pick<Controller, `io_${IoKind}` | `mod_${IoKind}` | `ch_${IoKind}`>;
+type FbFields = Pick<
+  Controller,
+  `${FieldbusKind}_capacity` | `${FieldbusKind}_devices` | `${FieldbusKind}_signals`
+>;
+
+const num = (v: number | null | undefined) =>
+  typeof v === "number" && Number.isFinite(v) ? v : null;
+export const ioUsed = (c: Partial<IoFields>, k: IoKind) => num(c[`io_${k}`]);
+export const ioModules = (c: Partial<IoFields>, k: IoKind) => num(c[`mod_${k}`]);
+export const ioPerModule = (c: Partial<IoFields>, k: IoKind) => num(c[`ch_${k}`]);
+
+/** Нийт суваг = модулийн тоо × нэг модулийн суваг (аль нэг нь хоосон бол тодорхойгүй) */
+export function ioChannels(c: Partial<IoFields>, k: IoKind): number | null {
+  const m = ioModules(c, k),
+    ch = ioPerModule(c, k);
+  return m === null || ch === null ? null : m * ch;
+}
+/** Нөөц суваг = нийт суваг − ашиглаж буй сигнал */
+export function ioSpare(c: Partial<IoFields>, k: IoKind): number | null {
+  const total = ioChannels(c, k);
+  return total === null ? null : total - (ioUsed(c, k) ?? 0);
+}
+export const pct = (part: number | null, whole: number | null) =>
+  part === null || whole === null || whole <= 0 ? null : part / whole;
+
+/** Бүх төрлийн нийлбэр: суваг тодорхой төрлүүдээр нөөцийг тооцно */
+export function ioSummary(c: Partial<IoFields>) {
+  let channels: number | null = null,
+    usedWithCh = 0,
+    used = 0,
+    modules: number | null = null;
+  const over: IoKind[] = [];
+  for (const { k } of IO_KINDS) {
+    used += ioUsed(c, k) ?? 0;
+    const m = ioModules(c, k);
+    if (m !== null) modules = (modules ?? 0) + m;
+    const t = ioChannels(c, k);
+    if (t !== null) {
+      channels = (channels ?? 0) + t;
+      usedWithCh += ioUsed(c, k) ?? 0;
+      if ((ioUsed(c, k) ?? 0) > t) over.push(k);
+    }
+  }
+  const spare = channels === null ? null : channels - usedWithCh;
+  /** over: ашигласан сигнал нь нийт сувгаас хэтэрсэн төрлүүд */
+  return { used, modules, channels, spare, sparePct: pct(spare, channels), over };
+}
+
+export const fbValue = (
+  c: Partial<FbFields>,
+  k: FieldbusKind,
+  f: "capacity" | "devices" | "signals",
+) => num(c[`${k}_${f}`]);
+export const fbTotal = (c: Partial<FbFields>, f: "capacity" | "devices" | "signals") =>
+  FIELDBUS.reduce((s, { k }) => s + (fbValue(c, k, f) ?? 0), 0);
+
+/** Ашиглаж буй физик сигнал (AI+AO+DI+DO+PI) */
+export const ioTotal = (c: Partial<IoFields>) => ioSummary(c).used;
+/** Нийт сигнал = физик + fieldbus */
+export const allSignals = (c: Partial<IoFields & FbFields>) => ioTotal(c) + fbTotal(c, "signals");
 
 export function controllerAge(
   c: Pick<Controller, "commissioned">,
@@ -74,11 +174,23 @@ export function controllersToCsv(rows: Controller[], label: (c: Controller) => s
     "Үйлдвэрлэгч",
     "Загвар",
     "Ашиглалтад орсон",
-    "AI",
-    "AO",
-    "DI",
-    "DO",
-    "Нийт дохио",
+    ...IO_KINDS.flatMap(({ label }) => [
+      `${label} модуль`,
+      `${label} суваг/модуль`,
+      `${label} нийт суваг`,
+      `${label} ашигласан`,
+      `${label} нөөц`,
+    ]),
+    "Нийт суваг",
+    "Ашигласан физик сигнал",
+    "Нөөц суваг",
+    "Нөөц %",
+    ...FIELDBUS.flatMap(({ label }) => [
+      `${label} боломж (ТТ)`,
+      `${label} холбогдсон ТТ`,
+      `${label} сигнал`,
+    ]),
+    "Нийт сигнал",
     "IP",
     "Төлөв",
     "Тэмдэглэл",
@@ -93,11 +205,23 @@ export function controllersToCsv(rows: Controller[], label: (c: Controller) => s
       c.manufacturer,
       c.model,
       c.commissioned,
-      c.io_ai,
-      c.io_ao,
-      c.io_di,
-      c.io_do,
-      ioTotal(c),
+      ...IO_KINDS.flatMap(({ k }) => [
+        ioModules(c, k),
+        ioPerModule(c, k),
+        ioChannels(c, k),
+        ioUsed(c, k),
+        ioSpare(c, k),
+      ]),
+      ioSummary(c).channels,
+      ioSummary(c).used,
+      ioSummary(c).spare,
+      ioSummary(c).sparePct === null ? null : `${Math.round((ioSummary(c).sparePct ?? 0) * 100)}%`,
+      ...FIELDBUS.flatMap(({ k }) => [
+        fbValue(c, k, "capacity"),
+        fbValue(c, k, "devices"),
+        fbValue(c, k, "signals"),
+      ]),
+      allSignals(c),
       c.ip,
       status(c.status),
       c.notes,
