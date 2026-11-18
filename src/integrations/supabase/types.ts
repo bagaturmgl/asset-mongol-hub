@@ -36,6 +36,26 @@ export type Database = {
           tag: string
           unit: string
           updated_at: string
+          mod_ai: number | null
+          mod_ao: number | null
+          mod_di: number | null
+          mod_do: number | null
+          mod_pi: number | null
+          ch_ai: number | null
+          ch_ao: number | null
+          ch_di: number | null
+          ch_do: number | null
+          ch_pi: number | null
+          io_pi: number | null
+          pb_capacity: number | null
+          pb_devices: number | null
+          pb_signals: number | null
+          mb_capacity: number | null
+          mb_devices: number | null
+          mb_signals: number | null
+          eth_capacity: number | null
+          eth_devices: number | null
+          eth_signals: number | null
         }
         Insert: {
           commissioned?: string | null
@@ -58,6 +78,26 @@ export type Database = {
           tag: string
           unit: string
           updated_at?: string
+          mod_ai?: number | null
+          mod_ao?: number | null
+          mod_di?: number | null
+          mod_do?: number | null
+          mod_pi?: number | null
+          ch_ai?: number | null
+          ch_ao?: number | null
+          ch_di?: number | null
+          ch_do?: number | null
+          ch_pi?: number | null
+          io_pi?: number | null
+          pb_capacity?: number | null
+          pb_devices?: number | null
+          pb_signals?: number | null
+          mb_capacity?: number | null
+          mb_devices?: number | null
+          mb_signals?: number | null
+          eth_capacity?: number | null
+          eth_devices?: number | null
+          eth_signals?: number | null
         }
         Update: {
           commissioned?: string | null
@@ -80,6 +120,26 @@ export type Database = {
           tag?: string
           unit?: string
           updated_at?: string
+          mod_ai?: number | null
+          mod_ao?: number | null
+          mod_di?: number | null
+          mod_do?: number | null
+          mod_pi?: number | null
+          ch_ai?: number | null
+          ch_ao?: number | null
+          ch_di?: number | null
+          ch_do?: number | null
+          ch_pi?: number | null
+          io_pi?: number | null
+          pb_capacity?: number | null
+          pb_devices?: number | null
+          pb_signals?: number | null
+          mb_capacity?: number | null
+          mb_devices?: number | null
+          mb_signals?: number | null
+          eth_capacity?: number | null
+          eth_devices?: number | null
+          eth_signals?: number | null
         }
         Relationships: []
       }
