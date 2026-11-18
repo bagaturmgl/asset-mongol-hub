@@ -196,6 +196,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_edit_controllers: { Args: { _user_id: string }; Returns: boolean }
       can_edit_section: {
         Args: { _section: string; _user_id: string }
         Returns: boolean
@@ -221,7 +222,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "section_user"
+      app_role: "admin" | "section_user" | "controller_editor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -349,7 +350,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "section_user"],
+      app_role: ["admin", "section_user", "controller_editor"],
     },
   },
 } as const

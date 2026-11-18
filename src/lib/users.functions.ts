@@ -16,7 +16,13 @@ async function assertAdmin(supabase: any, userId: string) {
   if (error || !data) throw new Error("Зөвхөн админ эрхтэй.");
 }
 
-export type SectionUser = { user_id: string; email: string; isAdmin: boolean; sections: string[] };
+export type SectionUser = {
+  user_id: string;
+  email: string;
+  isAdmin: boolean;
+  isControllerEditor: boolean;
+  sections: string[];
+};
 
 export const listSectionUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -32,9 +38,11 @@ export const listSectionUsers = createServerFn({ method: "GET" })
         user_id: r.user_id,
         email: list?.users.find((x) => x.id === r.user_id)?.email ?? "",
         isAdmin: false,
+        isControllerEditor: false,
         sections: [],
       };
       if (r.role === "admin") u.isAdmin = true;
+      else if (r.role === "controller_editor") u.isControllerEditor = true;
       else if (r.section && !u.sections.includes(r.section)) u.sections.push(r.section);
       byUser.set(r.user_id, u);
     }
@@ -47,7 +55,19 @@ export const createSectionUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z
-      .object({ email: z.string().email(), password: z.string().min(8), sections: sectionsSchema })
+      .union([
+        z.object({
+          kind: z.literal("section"),
+          email: z.string().email(),
+          password: z.string().min(8),
+          sections: sectionsSchema,
+        }),
+        z.object({
+          kind: z.literal("controller"),
+          email: z.string().email(),
+          password: z.string().min(8),
+        }),
+      ])
       .parse(d),
   )
   .handler(async ({ context, data }) => {
@@ -61,11 +81,13 @@ export const createSectionUser = createServerFn({ method: "POST" })
     if (error || !created.user) throw new Error(error?.message ?? "Хэрэглэгч үүсгэж чадсангүй.");
     const userId = created.user.id;
     const { error: roleErr } = await supabaseAdmin.from("user_roles").insert(
-      data.sections.map((section) => ({
-        user_id: userId,
-        role: "section_user" as const,
-        section,
-      })),
+      data.kind === "controller"
+        ? [{ user_id: userId, role: "controller_editor" as const, section: null }]
+        : data.sections.map((section) => ({
+            user_id: userId,
+            role: "section_user" as const,
+            section,
+          })),
     );
     if (roleErr) {
       // Эрх оноож чадаагүй бол эрхгүй бүртгэл үлдээхгүй

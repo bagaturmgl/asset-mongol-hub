@@ -164,7 +164,7 @@ function ControllersPage() {
     a.click();
   };
 
-  const canAdd = auth.isAdmin || auth.sections.length > 0;
+  const canAdd = auth.canEditControllers;
 
   return (
     <div className="min-h-screen bg-background">
@@ -343,7 +343,7 @@ function ControllersPage() {
                           </TableCell>
                           <TableCell>
                             <div className="flex justify-end">
-                              {auth.canEdit(c.section) && (
+                              {auth.canEditControllers && (
                                 <Button
                                   size="icon"
                                   variant="ghost"
@@ -590,7 +590,7 @@ function ControllerDialog({
 
   const units = UNITS.filter((u) => controllerUnitAllowed(u.code));
   const sections = sectionsForUnit(v.unit).filter(
-    (s) => auth.isAdmin || auth.sections.includes(s.code),
+    (s) => !!s,
   );
   const subs = SUB_SECTIONS[v.section] ?? [];
   const mains = v.section && v.sub_section ? mainEquipmentOptions(v.section, v.sub_section) : [];

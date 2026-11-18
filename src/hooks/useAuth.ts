@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 export type Access = {
   user: User | null;
   isAdmin: boolean;
+  /** DCS/PLC бүртгэл нэмэх/засах эрх (админ эсвэл контроллерын инженер). */
+  canEditControllers: boolean;
   /** Хэрэглэгчид оноосон бүх хэсгийн код (админд хоосон). */
   sections: string[];
   /**
@@ -15,7 +17,7 @@ export type Access = {
   loading: boolean;
 };
 
-const EMPTY: Omit<Access, "loading"> = { user: null, isAdmin: false, sections: [], section: null };
+const EMPTY: Omit<Access, "loading"> = { user: null, isAdmin: false, canEditControllers: false, sections: [], section: null };
 
 export function useAuth(): Access & { canEdit: (section: string) => boolean } {
   const [state, setState] = useState<Access>({ ...EMPTY, loading: true });
@@ -43,6 +45,7 @@ export function useAuth(): Access & { canEdit: (section: string) => boolean } {
       setState({
         user,
         isAdmin: rows.some((r) => r.role === "admin"),
+        canEditControllers: rows.some((r) => r.role === "admin" || r.role === "controller_editor"),
         sections,
         section: sections.length ? sections.join(", ") : null,
         loading: false,

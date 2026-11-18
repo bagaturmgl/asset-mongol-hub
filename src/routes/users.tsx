@@ -108,6 +108,7 @@ function UsersPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [sections, setSections] = useState<string[]>([]);
+  const [kind, setKind] = useState<"section" | "controller">("section");
   const [editing, setEditing] = useState<{ user_id: string; sections: string[] } | null>(null);
   // Устгахаар сонгосон хэрэглэгч — апп доторх баталгаажуулах цонх (хөтчийн confirm() зарим орчинд гарахгүй)
   const [deleting, setDeleting] = useState<SectionUser | null>(null);
@@ -120,7 +121,13 @@ function UsersPage() {
   });
 
   const add = useMutation({
-    mutationFn: () => create({ data: { email, password, sections } }),
+    mutationFn: () =>
+      create({
+        data:
+          kind === "controller"
+            ? { kind, email, password }
+            : { kind, email, password, sections },
+      }),
     onSuccess: () => {
       toast.success("Хэрэглэгч нэмэгдлээ.");
       setEmail("");
@@ -204,10 +211,41 @@ function UsersPage() {
           </div>
         </div>
         <div className="space-y-2">
-          <Label>Хэсгүүд</Label>
-          <SectionPicker value={sections} onChange={setSections} />
+          <Label>Эрхийн төрөл</Label>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Эрхийн төрөл">
+            {(
+              [
+                ["section", "Хэсгийн хэрэглэгч"],
+                ["controller", "DCS/PLC инженер (ASU/БТАХ)"],
+              ] as const
+            ).map(([k, label]) => (
+              <Button
+                key={k}
+                type="button"
+                size="sm"
+                variant={kind === k ? "default" : "outline"}
+                aria-pressed={kind === k}
+                onClick={() => setKind(k)}
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
         </div>
-        <Button type="submit" disabled={!sections.length || add.isPending}>
+        {kind === "section" ? (
+          <div className="space-y-2">
+            <Label>Хэсгүүд</Label>
+            <SectionPicker value={sections} onChange={setSections} />
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Зөвхөн DCS/PLC бүртгэл нэмж, засварлана. Тоног төхөөрөмжийн бүртгэлийг зөвхөн харна.
+          </p>
+        )}
+        <Button
+          type="submit"
+          disabled={(kind === "section" && !sections.length) || add.isPending}
+        >
           Нэмэх
         </Button>
       </form>
@@ -221,11 +259,14 @@ function UsersPage() {
                 <span className="min-w-0 flex-1 truncate">{u.email}</span>
                 {u.isAdmin ? (
                   <span className="text-muted-foreground">Админ</span>
+                ) : u.isControllerEditor ? (
+                  <span className="text-muted-foreground">DCS/PLC инженер</span>
                 ) : (
                   !isEditing && <SectionBadges sections={u.sections} />
                 )}
                 {!u.isAdmin && !isEditing && (
                   <span className="flex shrink-0">
+                    {!u.isControllerEditor && (
                     <Button
                       size="icon"
                       variant="ghost"
@@ -234,6 +275,7 @@ function UsersPage() {
                     >
                       <Pencil className="size-4" />
                     </Button>
+                    )}
                     <Button
                       size="icon"
                       variant="ghost"
