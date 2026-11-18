@@ -82,11 +82,11 @@ export const createSectionUser = createServerFn({ method: "POST" })
     const userId = created.user.id;
     const { error: roleErr } = await supabaseAdmin.from("user_roles").insert(
       data.kind === "controller"
-        ? [{ user_id: userId, role: "controller_editor" as const, section: null }]
+        ? [{ user_id: userId, role: "controller_editor" as const, section: null as string | null }]
         : data.sections.map((section) => ({
             user_id: userId,
-            role: "section_user" as const,
-            section,
+            role: "section_user" as "section_user" | "controller_editor",
+            section: section as string | null,
           })),
     );
     if (roleErr) {
