@@ -14,6 +14,7 @@ import {
   Plus,
   Search,
   Trash2,
+  Eye,
 } from "lucide-react";
 
 import {
@@ -59,6 +60,20 @@ import {
   ioTotal,
   nextControllerTag,
   type Controller,
+  FIELDBUS,
+  IO_KINDS,
+  allSignals,
+  fbTotal,
+  fbValue,
+  ioChannels,
+  ioModules,
+  ioPerModule,
+  ioSpare,
+  ioSummary,
+  ioUsed,
+  pct,
+  type FieldbusKind,
+  type IoKind,
 } from "@/lib/controllers";
 import {
   SUB_SECTIONS,
@@ -109,6 +124,7 @@ function ControllersPage() {
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Partial<Controller> | null>(null);
   const [deleting, setDeleting] = useState<Controller | null>(null);
+  const [viewing, setViewing] = useState<Controller | null>(null);
 
   const query = useQuery({
     queryKey: ["controllers"],
@@ -281,11 +297,10 @@ function ControllersPage() {
                       <TableHead>Байршил</TableHead>
                       <TableHead>Үйлдвэрлэгч / Загвар</TableHead>
                       <TableHead>Ашиглалтад</TableHead>
-                      <TableHead className="text-right">AI</TableHead>
-                      <TableHead className="text-right">AO</TableHead>
-                      <TableHead className="text-right">DI</TableHead>
-                      <TableHead className="text-right">DO</TableHead>
-                      <TableHead className="text-right">Нийт</TableHead>
+                      <TableHead className="text-right">Ашигласан сигнал</TableHead>
+                      <TableHead className="text-right">Нийт суваг</TableHead>
+                      <TableHead className="text-right">Нөөц</TableHead>
+                      <TableHead className="text-right">Fieldbus ТТ / сигнал</TableHead>
                       <TableHead>Төлөв</TableHead>
                       <TableHead className="w-20" />
                     </TableRow>
@@ -293,14 +308,14 @@ function ControllersPage() {
                   <TableBody>
                     {query.isLoading && (
                       <TableRow>
-                        <TableCell colSpan={12} className="py-10 text-center">
+                        <TableCell colSpan={11} className="py-10 text-center">
                           <Loader2 className="mx-auto size-5 animate-spin text-muted-foreground" />
                         </TableCell>
                       </TableRow>
                     )}
                     {!query.isLoading && !filtered.length && (
                       <TableRow>
-                        <TableCell colSpan={12} className="py-10 text-center text-muted-foreground">
+                        <TableCell colSpan={11} className="py-10 text-center text-muted-foreground">
                           Бүртгэл олдсонгүй.
                         </TableCell>
                       </TableRow>
@@ -310,7 +325,13 @@ function ControllersPage() {
                       return (
                         <TableRow key={c.id}>
                           <TableCell className="whitespace-nowrap font-mono text-xs">
-                            {c.tag}
+                            <button
+                              type="button"
+                              className="text-left underline-offset-2 hover:underline"
+                              onClick={() => setViewing(c)}
+                            >
+                              {c.tag}
+                            </button>
                           </TableCell>
                           <TableCell>
                             <Badge variant={c.ctype === "DCS" ? "default" : "secondary"}>
@@ -330,19 +351,37 @@ function ControllersPage() {
                               </span>
                             )}
                           </TableCell>
-                          {(["io_ai", "io_ao", "io_di", "io_do"] as const).map((k) => (
-                            <TableCell key={k} className="text-right tabular-nums">
-                              {c[k] ?? "—"}
-                            </TableCell>
-                          ))}
                           <TableCell className="text-right font-medium tabular-nums">
                             {ioTotal(c)}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {ioSummary(c).channels ?? "—"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <SpareBadge
+                              spare={ioSummary(c).spare}
+                              ratio={ioSummary(c).sparePct}
+                              over={ioSummary(c).over}
+                            />
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap text-right tabular-nums">
+                            {fbTotal(c, "devices") || fbTotal(c, "signals")
+                              ? `${fbTotal(c, "devices")} / ${fbTotal(c, "signals")}`
+                              : "—"}
                           </TableCell>
                           <TableCell className="whitespace-nowrap text-sm">
                             {statusLabel(c.status)}
                           </TableCell>
                           <TableCell>
                             <div className="flex justify-end">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                aria-label={`${c.tag} дэлгэрэнгүй`}
+                                onClick={() => setViewing(c)}
+                              >
+                                <Eye className="size-4" />
+                              </Button>
                               {auth.canEditControllers && (
                                 <Button
                                   size="icon"
@@ -378,6 +417,21 @@ function ControllersPage() {
           </>
         )}
       </main>
+
+      {viewing && (
+        <ControllerView
+          c={viewing}
+          onClose={() => setViewing(null)}
+          onEdit={
+            auth.canEditControllers
+              ? () => {
+                  setEditing(viewing);
+                  setViewing(null);
+                }
+              : null
+          }
+        />
+      )}
 
       {editing && (
         <ControllerDialog
@@ -467,11 +521,15 @@ function Summary({ rows }: { rows: Controller[] }) {
   });
   const ages = rows.map((r) => controllerAge(r)).filter((a): a is number => a !== null);
   const avg = ages.length ? ages.reduce((s, a) => s + a, 0) / ages.length : null;
-  const sum = (k: "io_ai" | "io_ao" | "io_di" | "io_do") =>
-    rows.reduce((s, r) => s + (r[k] ?? 0), 0);
+  const sum = (k: IoKind) => rows.reduce((s, r) => s + (ioUsed(r, k) ?? 0), 0);
+  const withCh = rows.filter((r) => ioSummary(r).channels !== null);
+  const totalCh = withCh.reduce((s, r) => s + (ioSummary(r).channels ?? 0), 0);
+  const totalSpare = withCh.reduce((s, r) => s + (ioSummary(r).spare ?? 0), 0);
+  const fbSig = rows.reduce((s, r) => s + fbTotal(r, "signals"), 0);
+  const fbDev = rows.reduce((s, r) => s + fbTotal(r, "devices"), 0);
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
       {byType.map((x) => (
         <div key={x.t} className="rounded-xl border bg-card p-4">
           <p className="text-xs font-semibold text-muted-foreground">{x.t}</p>
@@ -483,12 +541,29 @@ function Summary({ rows }: { rows: Controller[] }) {
         </div>
       ))}
       <div className="rounded-xl border bg-card p-4">
-        <p className="text-xs font-semibold text-muted-foreground">Нийт дохио</p>
+        <p className="text-xs font-semibold text-muted-foreground">Нийт сигнал</p>
         <p className="mt-1 text-3xl font-semibold tabular-nums">
-          {rows.reduce((s, r) => s + ioTotal(r), 0)}
+          {rows.reduce((s, r) => s + allSignals(r), 0)}
         </p>
         <p className="mt-2 text-xs tabular-nums">
-          AI {sum("io_ai")} · AO {sum("io_ao")} · DI {sum("io_di")} · DO {sum("io_do")}
+          {IO_KINDS.map(({ k, label }) => `${label} ${sum(k)}`).join(" · ")}
+        </p>
+        <p className="text-xs tabular-nums text-muted-foreground">
+          Fieldbus: {fbDev} ТТ, {fbSig} сигнал
+        </p>
+      </div>
+      <div className="rounded-xl border bg-card p-4">
+        <p className="text-xs font-semibold text-muted-foreground">Нөөц суваг</p>
+        <p className="mt-1 text-3xl font-semibold tabular-nums">
+          {withCh.length ? totalSpare : "—"}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {withCh.length
+            ? `нийт ${totalCh} сувгийн ${Math.round((pct(totalSpare, totalCh) ?? 0) * 100)}%`
+            : "модулийн мэдээлэл оруулаагүй"}
+        </p>
+        <p className="mt-2 text-xs">
+          Модулийн мэдээлэлтэй: {withCh.length} / {rows.length}
         </p>
       </div>
       <div className="rounded-xl border bg-card p-4">
@@ -577,10 +652,7 @@ function ControllerDialog({
     manufacturer: row.manufacturer ?? "",
     model: row.model ?? "",
     commissioned: row.commissioned ?? "",
-    io_ai: row.io_ai?.toString() ?? "",
-    io_ao: row.io_ao?.toString() ?? "",
-    io_di: row.io_di?.toString() ?? "",
-    io_do: row.io_do?.toString() ?? "",
+    ...ioFormValues(row),
     ip: row.ip ?? "",
     status: row.status ?? "active",
     notes: row.notes ?? "",
@@ -589,9 +661,7 @@ function ControllerDialog({
   const set = (k: keyof typeof v, val: string) => setV((p) => ({ ...p, [k]: val }));
 
   const units = UNITS.filter((u) => controllerUnitAllowed(u.code));
-  const sections = sectionsForUnit(v.unit).filter(
-    (s) => !!s,
-  );
+  const sections = sectionsForUnit(v.unit).filter((s) => !!s);
   const subs = SUB_SECTIONS[v.section] ?? [];
   const mains = v.section && v.sub_section ? mainEquipmentOptions(v.section, v.sub_section) : [];
   const vendorList = useMemo(
@@ -640,10 +710,7 @@ function ControllerDialog({
       manufacturer: canonicalVendor(v.manufacturer),
       model: v.model.trim() || null,
       commissioned: v.commissioned.trim() || null,
-      io_ai: num(v.io_ai),
-      io_ao: num(v.io_ao),
-      io_di: num(v.io_di),
-      io_do: num(v.io_do),
+      ...ioPayload(v, num),
       ip: v.ip.trim() || null,
       status: v.status,
       notes: v.notes.trim() || null,
@@ -668,7 +735,7 @@ function ControllerDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && !saving && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isNew ? "Шинэ контроллер" : `Засах: ${row.tag}`}</DialogTitle>
         </DialogHeader>
@@ -759,19 +826,8 @@ function ControllerDialog({
               />
             </F>
           </div>
-          <div className="grid grid-cols-4 gap-3">
-            {(["io_ai", "io_ao", "io_di", "io_do"] as const).map((k) => (
-              <F key={k} label={k.slice(3).toUpperCase()}>
-                <Input
-                  type="number"
-                  min={0}
-                  inputMode="numeric"
-                  value={v[k]}
-                  onChange={(e) => set(k, e.target.value)}
-                />
-              </F>
-            ))}
-          </div>
+          <IoMatrixEditor values={v} onChange={(k, val) => setV((p) => ({ ...p, [k]: val }))} />
+          <FieldbusEditor values={v} onChange={(k, val) => setV((p) => ({ ...p, [k]: val }))} />
           <div className="grid gap-4 sm:grid-cols-2">
             <F label="Төлөв">
               <Pick
@@ -800,5 +856,388 @@ function ControllerDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/* ---------- Модуль, суваг, нөөц ба fieldbus ---------- */
+
+const IO_FIELDS = IO_KINDS.flatMap(({ k }) => [`mod_${k}`, `ch_${k}`, `io_${k}`] as const);
+const FB_FIELDS = FIELDBUS.flatMap(
+  ({ k }) => [`${k}_capacity`, `${k}_devices`, `${k}_signals`] as const,
+);
+type IoFormKey = (typeof IO_FIELDS)[number] | (typeof FB_FIELDS)[number];
+type IoForm = Record<IoFormKey, string>;
+
+function ioFormValues(row: Partial<Controller>): IoForm {
+  const out = {} as IoForm;
+  for (const f of [...IO_FIELDS, ...FB_FIELDS]) {
+    const val = row[f];
+    out[f] = typeof val === "number" ? String(val) : "";
+  }
+  return out;
+}
+
+function ioPayload(v: IoForm, num: (s: string) => number | null) {
+  const out = {} as Record<IoFormKey, number | null>;
+  for (const f of [...IO_FIELDS, ...FB_FIELDS]) out[f] = num(v[f]);
+  return out;
+}
+
+const fmtPct = (r: number | null) => (r === null ? "—" : `${Math.round(r * 100)}%`);
+
+/** Нөөцийн хувийг өнгөөр: хэтэрсэн (улаан), < 10% (улбар), бусад */
+function SpareBadge({
+  spare,
+  ratio,
+  over,
+}: {
+  spare: number | null;
+  ratio: number | null;
+  over: readonly string[];
+}) {
+  if (spare === null) return <span className="text-muted-foreground">—</span>;
+  const cls =
+    spare < 0 || over.length
+      ? "bg-destructive/15 text-destructive"
+      : (ratio ?? 0) < 0.1
+        ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+        : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400";
+  return (
+    <span
+      className={`inline-flex whitespace-nowrap rounded-md px-1.5 py-0.5 text-xs font-medium tabular-nums ${cls}`}
+    >
+      {spare} · {fmtPct(ratio)}
+      {over.length > 0 && (
+        <span className="ml-1">({over.map((k) => k.toUpperCase()).join(", ")} хэтэрсэн)</span>
+      )}
+    </span>
+  );
+}
+
+/** Харах горимын хүснэгт: модуль → суваг/модуль → нийт → ашигласан → нөөц → нөөц % */
+function IoMatrix({ c }: { c: Partial<Controller> }) {
+  const sum = ioSummary(c);
+  const totalMods = sum.modules;
+  const cell = "px-2 py-1.5 text-right tabular-nums";
+  const rows: [string, (k: IoKind) => React.ReactNode, React.ReactNode][] = [
+    ["Модулийн тоо", (k) => ioModules(c, k) ?? "—", totalMods ?? "—"],
+    ["Модулийн сувгийн тоо", (k) => ioPerModule(c, k) ?? "—", ""],
+    ["Нийт суваг", (k) => ioChannels(c, k) ?? "—", sum.channels ?? "—"],
+    ["Ашиглаж буй физик сигнал", (k) => ioUsed(c, k) ?? "—", sum.used],
+    ["Нөөц суваг", (k) => ioSpare(c, k) ?? "—", sum.spare ?? "—"],
+    ["Нөөц %", (k) => fmtPct(pct(ioSpare(c, k), ioChannels(c, k))), fmtPct(sum.sparePct)],
+  ];
+  return (
+    <div className="overflow-x-auto rounded-lg border">
+      <table className="w-full text-sm">
+        <thead className="bg-muted/50 text-xs text-muted-foreground">
+          <tr>
+            <th className="px-2 py-1.5 text-left font-medium">Оролт / гаралт</th>
+            {IO_KINDS.map(({ k, label }) => (
+              <th key={k} className="px-2 py-1.5 text-right font-medium">
+                {label}
+              </th>
+            ))}
+            <th className="px-2 py-1.5 text-right font-medium">Нийт</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(([name, f, total]) => (
+            <tr key={name} className="border-t">
+              <td className="px-2 py-1.5">{name}</td>
+              {IO_KINDS.map(({ k }) => {
+                const over = name === "Нөөц суваг" && (ioSpare(c, k) ?? 0) < 0;
+                return (
+                  <td key={k} className={`${cell} ${over ? "font-semibold text-destructive" : ""}`}>
+                    {f(k)}
+                  </td>
+                );
+              })}
+              <td className={`${cell} font-medium`}>{total}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function FieldbusTable({ c }: { c: Partial<Controller> }) {
+  const cell = "px-2 py-1.5 text-right tabular-nums";
+  return (
+    <div className="overflow-x-auto rounded-lg border">
+      <table className="w-full text-sm">
+        <thead className="bg-muted/50 text-xs text-muted-foreground">
+          <tr>
+            <th className="px-2 py-1.5 text-left font-medium">Протокол</th>
+            <th className="px-2 py-1.5 text-right font-medium">Холбох боломж (ТТ)</th>
+            <th className="px-2 py-1.5 text-right font-medium">Холбогдсон ТТ</th>
+            <th className="px-2 py-1.5 text-right font-medium">Сул</th>
+            <th className="px-2 py-1.5 text-right font-medium">Сигналын тоо</th>
+          </tr>
+        </thead>
+        <tbody>
+          {FIELDBUS.map(({ k, label, name }) => {
+            const cap = fbValue(c, k, "capacity"),
+              dev = fbValue(c, k, "devices");
+            return (
+              <tr key={k} className="border-t">
+                <td className="px-2 py-1.5">
+                  {label} <span className="text-xs text-muted-foreground">({name})</span>
+                </td>
+                <td className={cell}>{cap ?? "—"}</td>
+                <td className={cell}>{dev ?? "—"}</td>
+                <td
+                  className={`${cell} ${cap !== null && dev !== null && dev > cap ? "font-semibold text-destructive" : ""}`}
+                >
+                  {cap === null ? "—" : cap - (dev ?? 0)}
+                </td>
+                <td className={cell}>{fbValue(c, k, "signals") ?? "—"}</td>
+              </tr>
+            );
+          })}
+          <tr className="border-t font-medium">
+            <td className="px-2 py-1.5">Нийт</td>
+            <td className={cell}>{fbTotal(c, "capacity") || "—"}</td>
+            <td className={cell}>{fbTotal(c, "devices") || "—"}</td>
+            <td className={cell} />
+            <td className={cell}>{fbTotal(c, "signals") || "—"}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ControllerView({
+  c,
+  onClose,
+  onEdit,
+}: {
+  c: Controller;
+  onClose: () => void;
+  onEdit: (() => void) | null;
+}) {
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-mono">{c.tag}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-5">
+          <p className="text-sm text-muted-foreground">
+            {locationLabel(c)} · {[c.manufacturer, c.model].filter(Boolean).join(" ") || "—"} ·{" "}
+            {c.commissioned ?? "он тодорхойгүй"}
+          </p>
+          <section className="space-y-2">
+            <h3 className="text-sm font-semibold">Модуль, суваг, нөөц</h3>
+            <IoMatrix c={c} />
+          </section>
+          <section className="space-y-2">
+            <h3 className="text-sm font-semibold">Fieldbus холболт</h3>
+            <FieldbusTable c={c} />
+          </section>
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+            <span>
+              Нийт сигнал: <b className="tabular-nums">{allSignals(c)}</b>
+              <span className="text-muted-foreground">
+                {" "}
+                (физик {ioTotal(c)} + fieldbus {fbTotal(c, "signals")})
+              </span>
+            </span>
+            {onEdit && (
+              <Button size="sm" onClick={onEdit}>
+                <Pencil className="size-4" /> Засах
+              </Button>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function NumIn({
+  value,
+  onChange,
+  label,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+}) {
+  return (
+    <Input
+      type="number"
+      min={0}
+      inputMode="numeric"
+      aria-label={label}
+      className="h-8 px-2 text-right tabular-nums"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  );
+}
+
+/** Засах горим: модулийн тоо, суваг/модуль, ашигласан сигналыг оруулж, нийт ба нөөцийг шууд тооцно */
+function IoMatrixEditor({
+  values,
+  onChange,
+}: {
+  values: IoForm;
+  onChange: (k: IoFormKey, v: string) => void;
+}) {
+  const toNum = (s: string) => (s.trim() === "" ? null : Math.max(0, Math.round(Number(s))));
+  const preview: Partial<Controller> = {};
+  for (const f of IO_FIELDS) (preview as Record<string, number | null>)[f] = toNum(values[f]);
+  const sum = ioSummary(preview);
+  const inputs: [string, (k: IoKind) => IoFormKey][] = [
+    ["Модулийн тоо", (k) => `mod_${k}`],
+    ["Модулийн сувгийн тоо", (k) => `ch_${k}`],
+  ];
+  const cell = "px-1.5 py-1 text-right tabular-nums";
+  return (
+    <section className="space-y-2">
+      <h3 className="text-sm font-semibold">Модуль, суваг, нөөц</h3>
+      <div className="overflow-x-auto rounded-lg border">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50 text-xs text-muted-foreground">
+            <tr>
+              <th className="px-2 py-1.5 text-left font-medium">Оролт / гаралт</th>
+              {IO_KINDS.map(({ k, label }) => (
+                <th key={k} className="px-1.5 py-1.5 text-right font-medium">
+                  {label}
+                </th>
+              ))}
+              <th className="px-2 py-1.5 text-right font-medium">Нийт</th>
+            </tr>
+          </thead>
+          <tbody>
+            {inputs.map(([name, key]) => (
+              <tr key={name} className="border-t">
+                <td className="px-2 py-1">{name}</td>
+                {IO_KINDS.map(({ k, label }) => (
+                  <td key={k} className="px-1.5 py-1">
+                    <NumIn
+                      label={`${label} ${name}`}
+                      value={values[key(k)]}
+                      onChange={(v) => onChange(key(k), v)}
+                    />
+                  </td>
+                ))}
+                <td className={`${cell} font-medium`}>
+                  {name === "Модулийн тоо" ? (sum.modules ?? "—") : ""}
+                </td>
+              </tr>
+            ))}
+            <tr className="border-t bg-muted/30">
+              <td className="px-2 py-1">Нийт суваг</td>
+              {IO_KINDS.map(({ k }) => (
+                <td key={k} className={cell}>
+                  {ioChannels(preview, k) ?? "—"}
+                </td>
+              ))}
+              <td className={`${cell} font-medium`}>{sum.channels ?? "—"}</td>
+            </tr>
+            <tr className="border-t">
+              <td className="px-2 py-1">Ашиглаж буй физик сигнал</td>
+              {IO_KINDS.map(({ k, label }) => (
+                <td key={k} className="px-1.5 py-1">
+                  <NumIn
+                    label={`${label} ашигласан`}
+                    value={values[`io_${k}`]}
+                    onChange={(v) => onChange(`io_${k}`, v)}
+                  />
+                </td>
+              ))}
+              <td className={`${cell} font-medium`}>{sum.used}</td>
+            </tr>
+            <tr className="border-t bg-muted/30">
+              <td className="px-2 py-1">Нөөц суваг</td>
+              {IO_KINDS.map(({ k }) => {
+                const sp = ioSpare(preview, k);
+                return (
+                  <td
+                    key={k}
+                    className={`${cell} ${sp !== null && sp < 0 ? "font-semibold text-destructive" : ""}`}
+                  >
+                    {sp ?? "—"}
+                  </td>
+                );
+              })}
+              <td className={`${cell} font-medium`}>{sum.spare ?? "—"}</td>
+            </tr>
+            <tr className="border-t bg-muted/30">
+              <td className="px-2 py-1">Нөөц %</td>
+              {IO_KINDS.map(({ k }) => (
+                <td key={k} className={cell}>
+                  {fmtPct(pct(ioSpare(preview, k), ioChannels(preview, k)))}
+                </td>
+              ))}
+              <td className={`${cell} font-medium`}>{fmtPct(sum.sparePct)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      {sum.over.length > 0 && (
+        <p className="text-xs text-destructive">
+          {sum.over.map((k) => k.toUpperCase()).join(", ")}: ашигласан сигнал нийт сувгаас их байна
+          — модуль эсвэл сувгийн тоог шалгана уу.
+        </p>
+      )}
+    </section>
+  );
+}
+
+function FieldbusEditor({
+  values,
+  onChange,
+}: {
+  values: IoForm;
+  onChange: (k: IoFormKey, v: string) => void;
+}) {
+  const cols: ["capacity" | "devices" | "signals", string][] = [
+    ["capacity", "Холбох боломж (ТТ)"],
+    ["devices", "Холбогдсон ТТ"],
+    ["signals", "Сигналын тоо"],
+  ];
+  return (
+    <section className="space-y-2">
+      <h3 className="text-sm font-semibold">Fieldbus холболт</h3>
+      <div className="overflow-x-auto rounded-lg border">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50 text-xs text-muted-foreground">
+            <tr>
+              <th className="px-2 py-1.5 text-left font-medium">Протокол</th>
+              {cols.map(([, l]) => (
+                <th key={l} className="px-1.5 py-1.5 text-right font-medium">
+                  {l}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {FIELDBUS.map(
+              ({ k, label, name }: { k: FieldbusKind; label: string; name: string }) => (
+                <tr key={k} className="border-t">
+                  <td className="px-2 py-1">
+                    {label} <span className="text-xs text-muted-foreground">({name})</span>
+                  </td>
+                  {cols.map(([f, l]) => (
+                    <td key={f} className="px-1.5 py-1">
+                      <NumIn
+                        label={`${label} ${l}`}
+                        value={values[`${k}_${f}`]}
+                        onChange={(v) => onChange(`${k}_${f}`, v)}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ),
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
