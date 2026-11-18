@@ -200,6 +200,18 @@ export type Database = {
         Args: { _section: string; _user_id: string }
         Returns: boolean
       }
+      dashboard_equipment_stats: {
+        Args: never
+        Returns: {
+          category: string
+          function_code: string
+          manufacturer: string
+          parameter: string
+          subtype: string
+          unit: string
+          year: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

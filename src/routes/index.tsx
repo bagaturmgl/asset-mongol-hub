@@ -372,6 +372,19 @@ function Index() {
       />
 
       <main className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6">
+        {!auth.loading && !auth.user && (
+          <section className="rounded-xl border bg-card p-8 text-center shadow-sm">
+            <h2 className="text-base font-semibold">Бүртгэлийн жагсаалтыг харахын тулд нэвтэрнэ үү</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Нэвтрээгүй үед зөвхөн хянах самбарын нэгдсэн статистикийг харах боломжтой.
+            </p>
+            <div className="mt-4 flex justify-center gap-2">
+              <Button asChild><Link to="/auth">Нэвтрэх</Link></Button>
+              <Button variant="outline" asChild><Link to="/dashboard">Хянах самбар</Link></Button>
+            </div>
+          </section>
+        )}
+        {(auth.loading || auth.user) && (<>
         {view === "register" && (
           <section className="rounded-xl border bg-card p-5 shadow-sm sm:p-6">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
@@ -600,6 +613,7 @@ function Index() {
             </section>
           </>
         )}
+      </>)}
       </main>
 
       <EquipmentDetail

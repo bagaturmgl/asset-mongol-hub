@@ -15,6 +15,13 @@
       "when": 1794964522818,
       "tag": "0001_restrict_equipment_controllers_reads",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794967351058,
+      "tag": "0002_public_dashboard_stats",
+      "breakpoints": true
     }
   ]
 }

@@ -5,7 +5,7 @@ import { Cpu, Factory, LayoutDashboard, List, Loader2 } from "lucide-react";
 import { DeviceGroupPanel } from "@/components/DeviceGroupPanel";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { useEquipment } from "@/hooks/useEquipment";
+import { useDashboardStats } from "@/hooks/useEquipment";
 import { summarizeGroups } from "@/lib/dashboard";
 import { useOnlineStatus } from "@/lib/pwa";
 
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/dashboard")({
 
 function DashboardPage() {
   const online = useOnlineStatus();
-  const { data: items = [], isLoading, isError, failureCount, dataUpdatedAt } = useEquipment();
+  const { data: items = [], isLoading, isError, failureCount, dataUpdatedAt } = useDashboardStats();
   const groups = useMemo(() => summarizeGroups(items), [items]);
 
   const hasData = dataUpdatedAt > 0;

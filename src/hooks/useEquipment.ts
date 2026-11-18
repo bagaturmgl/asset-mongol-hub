@@ -26,3 +26,22 @@ async function fetchAllEquipment(): Promise<Equipment[]> {
 export function useEquipment() {
   return useQuery({ queryKey: EQUIPMENT_QUERY_KEY, queryFn: fetchAllEquipment });
 }
+
+/** Хянах самбарын статистик: нэвтрээгүй хүнд ч нээлттэй, зөвхөн ангиллын талбарууд. */
+async function fetchDashboardStats(): Promise<Equipment[]> {
+  const PAGE = 1000;
+  const all: Equipment[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .rpc("dashboard_equipment_stats")
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    all.push(...((data ?? []) as unknown as Equipment[]));
+    if (!data || data.length < PAGE) break;
+  }
+  return all;
+}
+
+export function useDashboardStats() {
+  return useQuery({ queryKey: ["dashboard-stats"], queryFn: fetchDashboardStats });
+}
