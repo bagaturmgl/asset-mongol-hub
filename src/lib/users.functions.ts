@@ -22,6 +22,8 @@ export type SectionUser = {
   isAdmin: boolean;
   isControllerEditor: boolean;
   isRslEditor: boolean;
+  /** Бүх бүртгэлийг засах (устгахгүй, хэрэглэгч удирдахгүй) */
+  isEditor: boolean;
   sections: string[];
 };
 
@@ -41,11 +43,13 @@ export const listSectionUsers = createServerFn({ method: "GET" })
         isAdmin: false,
         isControllerEditor: false,
         isRslEditor: false,
+        isEditor: false,
         sections: [],
       };
       if (r.role === "admin") u.isAdmin = true;
       else if (r.role === "controller_editor") u.isControllerEditor = true;
       else if (r.role === "rsl_editor") u.isRslEditor = true;
+      else if (r.role === "editor") u.isEditor = true;
       else if (r.section && !u.sections.includes(r.section)) u.sections.push(r.section);
       byUser.set(r.user_id, u);
     }
@@ -71,6 +75,11 @@ export const createSectionUser = createServerFn({ method: "POST" })
           password: z.string().min(8),
         }),
         z.object({
+          kind: z.literal("editor"),
+          email: z.string().email(),
+          password: z.string().min(8),
+        }),
+        z.object({
           kind: z.literal("rsl"),
           email: z.string().email(),
           password: z.string().min(8),
@@ -89,15 +98,24 @@ export const createSectionUser = createServerFn({ method: "POST" })
     if (error || !created.user) throw new Error(error?.message ?? "Хэрэглэгч үүсгэж чадсангүй.");
     const userId = created.user.id;
     const { error: roleErr } = await supabaseAdmin.from("user_roles").insert(
-      data.kind === "controller"
-        ? [{ user_id: userId, role: "controller_editor" as const, section: null as string | null }]
-        : data.kind === "rsl"
-          ? [{ user_id: userId, role: "rsl_editor" as const, section: null as string | null }]
-          : data.sections.map((section) => ({
-              user_id: userId,
-              role: "section_user" as "section_user" | "controller_editor" | "rsl_editor",
-              section: section as string | null,
-            })),
+      data.kind === "editor"
+        ? [{ user_id: userId, role: "editor" as const, section: null as string | null }]
+        : data.kind === "controller"
+          ? [
+              {
+                user_id: userId,
+                role: "controller_editor" as const,
+                section: null as string | null,
+              },
+            ]
+          : data.kind === "rsl"
+            ? [{ user_id: userId, role: "rsl_editor" as const, section: null as string | null }]
+            : data.sections.map((section) => ({
+                user_id: userId,
+                role: "section_user" as
+                  "section_user" | "controller_editor" | "rsl_editor" | "editor",
+                section: section as string | null,
+              })),
     );
     if (roleErr) {
       // Эрх оноож чадаагүй бол эрхгүй бүртгэл үлдээхгүй
