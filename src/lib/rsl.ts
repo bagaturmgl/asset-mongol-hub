@@ -177,4 +177,21 @@ export function cdRenewDate(i: Pick<RslItem, "activity_mbq" | "activity_date">):
 
 export const fmtPct = (r: number | null) => (r === null ? "—" : `${Math.round(r * 100)}%`);
 export const fmtMbq = (v: number | null) =>
-  v === null ? "—" : v >= 10 ? `${Math.round(v)} MBq` : `${v.toFixed(1)} MBq`; 
+  v === null ? "—" : v >= 10 ? `${Math.round(v)} MBq` : `${v.toFixed(1)} MBq`;
+
+/**
+ * Олон цэгтэй (MSA) анализаторын цэг, дээжний нэрийг хос болгоно:
+ * "214, 215, 216" + "ХвКл2Сек, ХвКтПпФл2Сек, Хв.кт. 2-й секции" → [["214","ХвКл2Сек"], …].
+ * Нэрийн тоо цэгийн тоотой таарахгүй бол нэргүй хос буцаана.
+ */
+export function pointRows(i: Pick<RslItem, "points" | "sample_name">): [string, string | null][] {
+  const split = (s: string | null) =>
+    (s ?? "")
+      .split(/[,;]/)
+      .map((x) => x.trim())
+      .filter(Boolean);
+  const pts = split(i.points);
+  const names = split(i.sample_name);
+  const paired = names.length === pts.length;
+  return pts.map((p, k) => [p, paired ? names[k]! : null]);
+}
