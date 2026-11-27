@@ -55,6 +55,7 @@ import {
   cdRenewDate,
   fmtMbq,
   fmtPct,
+  pointRows,
   rslTagPrefix,
   wear,
   type RslCategory,
@@ -520,6 +521,32 @@ function OverrunTag({ i }: { i: RslItem }) {
   );
 }
 
+/** Цэг ба дээжний нэр: олон цэгтэй (MSA) бол мөр мөрөөр доош цувуулна */
+function PointList({ i }: { i: RslItem }) {
+  const rows = pointRows(i);
+  if (rows.length > 1)
+    return (
+      <ul className="mt-0.5 space-y-0.5 text-muted-foreground">
+        {rows.map(([p, name]) => (
+          <li key={p} className="truncate" title={name ?? ""}>
+            <span className="tabular-nums text-foreground/80">{p}</span>
+            {name ? ` · ${name}` : ""}
+          </li>
+        ))}
+        {rows.every(([, n]) => n === null) && i.sample_name && (
+          <li className="truncate" title={i.sample_name}>
+            {i.sample_name}
+          </li>
+        )}
+      </ul>
+    );
+  return (
+    <p className="mt-0.5 truncate text-muted-foreground" title={i.sample_name ?? ""}>
+      {[i.points, i.sample_name].filter(Boolean).join(" · ") || "—"}
+    </p>
+  );
+}
+
 function AnalyzerCard({
   i,
   src,
@@ -545,9 +572,7 @@ function AnalyzerCard({
         <ItemStatus i={i} />
       </div>
       <OverrunTag i={i} />
-      <p className="mt-0.5 truncate text-muted-foreground" title={i.sample_name ?? ""}>
-        {[i.points, i.sample_name].filter(Boolean).join(" · ") || "—"}
-      </p>
+      <PointList i={i} />
       <div className="mt-1.5 flex items-baseline justify-between">
         <span>{i.year ?? "он —"}</span>
         <span className="text-muted-foreground">{fmtPct(w)}</span>
