@@ -239,7 +239,6 @@ export type Database = {
           id: string
           isotope: string | null
           kind: string | null
-          last_measured: string | null
           line: string | null
           maintenance_history: string | null
           manufacturer: string | null
@@ -270,7 +269,6 @@ export type Database = {
           id?: string
           isotope?: string | null
           kind?: string | null
-          last_measured?: string | null
           line?: string | null
           maintenance_history?: string | null
           manufacturer?: string | null
@@ -301,7 +299,6 @@ export type Database = {
           id?: string
           isotope?: string | null
           kind?: string | null
-          last_measured?: string | null
           line?: string | null
           maintenance_history?: string | null
           manufacturer?: string | null
