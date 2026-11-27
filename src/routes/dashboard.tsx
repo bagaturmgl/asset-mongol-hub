@@ -18,6 +18,10 @@ export const Route = createFileRoute("/dashboard")({
         content:
           "Мэдрэгч ба хувиргагч, гүйцэтгэх механизм, цацрагийн тоног төхөөрөмж, анализаторын тоо, төрөл, насжилт.",
       },
+      { property: "og:title", content: "Хянах самбар | ХХХА Тоног төхөөрөмж бүртгэл" },
+      { property: "og:description", content: "Тоног төхөөрөмжийн тоо, төрөл, насжилтын нэгдсэн статистик." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: DashboardPage,
@@ -65,7 +69,7 @@ function DashboardPage() {
             </Button>
             <Button size="sm" variant="ghost" asChild>
               <Link to="/rsl">
-                <Atom className="size-4" /> RSL
+                <Atom className="size-4" /> RSEL
               </Link>
             </Button>
           </nav>

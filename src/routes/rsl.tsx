@@ -65,11 +65,15 @@ import {
 export const Route = createFileRoute("/rsl")({
   head: () => ({
     meta: [
-      { title: "RSL | ХХХА Тоног төхөөрөмж бүртгэл" },
+      { title: "RSEL — Рентген шуурхай шинжилгээний лаборатори | ХХХА" },
       {
         name: "description",
-        content: "РШШЛХ: шингэн дээжний анализатор, Cd-109 үүсгүүр, лаборатори, ДАДАС трасс.",
+        content: "Рентген шуурхай шинжилгээний лаборатори: шингэн дээжний анализатор, Cd-109 үүсгүүр, лаборатори, ДАДАС трасс.",
       },
+      { property: "og:title", content: "RSEL — Рентген шуурхай шинжилгээний лаборатори | ХХХА" },
+      { property: "og:description", content: "Рентген шуурхай шинжилгээний лабораторийн тоног төхөөрөмжийн бүртгэл." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: RslPage,
@@ -233,7 +237,7 @@ function RslPage() {
               </Link>
             </Button>
             <span className={buttonVariants({ size: "sm" })} aria-current="page">
-              <Atom className="size-4" /> RSL
+              <Atom className="size-4" /> RSEL
             </span>
           </nav>
         </div>
@@ -243,7 +247,7 @@ function RslPage() {
         {auth.loading ? null : !auth.user ? (
           <div className="mx-auto max-w-md rounded-xl border bg-card p-8 text-center">
             <Atom className="mx-auto size-8 text-primary" aria-hidden />
-            <h2 className="mt-3 text-lg font-semibold">RSL бүртгэл</h2>
+            <h2 className="mt-3 text-lg font-semibold">Рентген шуурхай шинжилгээний лаборатори</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Цацрагийн үүсгүүр, зөвшөөрлийн мэдээлэл агуулдаг тул зөвхөн нэвтэрсэн хэрэглэгчид
               харагдана.
@@ -259,7 +263,7 @@ function RslPage() {
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold tracking-tight">
-                  РШШЛХ — рентген шуурхай шинжилгээ
+                  Рентген шуурхай шинжилгээний лаборатори
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   Шингэн дээжний анализатор, Cd-109 үүсгүүр, лаборатори, дээж авах трасс (ДАДАС).

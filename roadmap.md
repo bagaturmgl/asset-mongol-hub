@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Restrict main registration/list unit choices and rename laboratory navigation/title
+
 - [x] Equipment table in Cloud with seed sample rows
 - [x] Tag generator registration form (live preview)
 - [x] Inventory table: tag, unit, section, category, subtype, serial, year, status, date

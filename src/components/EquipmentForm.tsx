@@ -29,7 +29,7 @@ import {
   SECTIONS,
   STATUSES,
   SUB_SECTIONS,
-  UNITS,
+  MAIN_REGISTRY_UNITS,
   vendorIsaDefault,
   modelIsaDefault,
   MNU_DEVICES,
@@ -225,12 +225,7 @@ export function EquipmentForm({
     return [...set].sort((a, b) => a.localeCompare(b));
   }, [items, form.manufacturer]);
 
-  const configuredUnits = UNITS.map((u) => ({ code: u.code, label: u.label }));
-  const unitOptions = configuredUnits.some((item) => item.code === form.unit)
-    ? configuredUnits
-    : form.unit
-      ? [{ code: form.unit, label: form.unit }, ...configuredUnits]
-      : configuredUnits;
+  const unitOptions = MAIN_REGISTRY_UNITS;
   const configuredSubSections = SUB_SECTIONS[form.section] ?? [];
   const subSectionOptions = configuredSubSections.some((item) => item.code === form.sub_section)
     ? configuredSubSections

@@ -66,7 +66,7 @@ import {
   parameterLabel,
   MNU_DEVICES,
   SECTIONS,
-  UNITS,
+  MAIN_REGISTRY_UNITS,
   appendMaintenance,
   lastMaintenance,
   parseMaintenance,
@@ -91,6 +91,8 @@ export const Route = createFileRoute("/")({
         content:
           "Tag name генератор, тоног төхөөрөмжийн нэгдсэн сан, хайлт, шүүлтүүр, QR код, CSV экспорт.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Index,
@@ -335,7 +337,7 @@ function Index() {
               </Button>
               <Button type="button" size="sm" variant="ghost" asChild>
                 <Link to="/rsl">
-                  <Atom className="size-4" /> RSL
+                  <Atom className="size-4" /> RSEL
                 </Link>
               </Button>
             </nav>
@@ -467,7 +469,7 @@ function Index() {
               </div>
             </div>
             <FilterSelect value={unit} onChange={setUnit} placeholder="Бүх эрхлэгч">
-              {UNITS.map((u) => (
+              {MAIN_REGISTRY_UNITS.map((u) => (
                 <SelectItem key={u.code} value={u.code}>
                   {u.label}
                 </SelectItem>

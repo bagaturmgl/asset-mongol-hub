@@ -94,6 +94,10 @@ export const Route = createFileRoute("/controllers")({
         name: "description",
         content: "DCS ба PLC контроллерын бүртгэл: байршил, загвар, дохионы тоо, насжилт.",
       },
+      { property: "og:title", content: "DCS/PLC | ХХХА Тоног төхөөрөмж бүртгэл" },
+      { property: "og:description", content: "DCS ба PLC контроллерын бүртгэл: байршил, загвар, дохионы тоо, насжилт." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ControllersPage,
@@ -217,7 +221,7 @@ function ControllersPage() {
             </span>
             <Button size="sm" variant="ghost" asChild>
               <Link to="/rsl">
-                <Atom className="size-4" /> RSL
+                <Atom className="size-4" /> RSEL
               </Link>
             </Button>
           </nav>

@@ -34,6 +34,9 @@ export const UNITS = [
   { code: "GTR", label: "GTR — УТАТАХ" },
 ] as const;
 
+/** Үндсэн бүртгэл болон жагсаалтын эрхлэгчийн сонголтууд. */
+export const MAIN_REGISTRY_UNITS = UNITS.filter((unit) => unit.code === "ASU" || unit.code === "MNU");
+
 export const SECTIONS = [
   { code: "KSI", label: "KSI — Өөрөө нунтаглах" },
   { code: "IFO", label: "IFO — Нунтаглан баяжуулах" },

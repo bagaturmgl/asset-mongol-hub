@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep main-registry unit choices in MAIN_REGISTRY_UNITS, separate from the full service-unit catalog, so other registries and existing records remain unchanged.
