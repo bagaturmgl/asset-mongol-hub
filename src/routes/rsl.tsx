@@ -56,7 +56,6 @@ import {
   fmtMbq,
   fmtPct,
   rslTagPrefix,
-  staleAnalyzers,
   wear,
   type RslCategory,
   type RslItem,
@@ -168,7 +167,6 @@ function RslPage() {
         .includes(t),
     );
   const shown = items.filter(match);
-  const stale = useMemo(() => staleAnalyzers(items), [items]);
   const sourceOf = useMemo(() => {
     const m = new Map<string, RslItem>();
     items
@@ -293,10 +291,10 @@ function RslPage() {
                 note={`идэвх ${CD109_RENEW_MBQ} MBq-ээс бага`}
               />
               <Metric
-                label="Хэмжилт зогссон"
-                value={stale.size}
+                label="Сериал бөглөөгүй"
+                value={items.filter((i) => !i.serial).length}
                 tone="warn"
-                note="сүүлийн хэмжилт хоцорсон"
+                note={`нийт ${items.length} бүртгэлээс`}
               />
             </div>
 
@@ -338,7 +336,6 @@ function RslPage() {
                               key={i.id}
                               i={i}
                               src={sourceOf.get(i.code ?? "")}
-                              stale={stale.has(i.id)}
                               onOpen={() => open(i)}
                             />
                           ))}
@@ -496,9 +493,8 @@ function Metric({
   );
 }
 
-function ItemStatus({ i, stale }: { i: RslItem; stale?: boolean }) {
+function ItemStatus({ i }: { i: RslItem }) {
   if (i.status !== "active") return <Pill tone="muted">{statusLabel(i.status)}</Pill>;
-  if (stale) return <Pill tone="warn">хэмжилт зогссон</Pill>;
   if ((wear(i) ?? 0) >= 1) return <Pill tone="bad">хугацаа дууссан</Pill>;
   return <Pill tone="ok">ажиллаж байна</Pill>;
 }
@@ -506,17 +502,15 @@ function ItemStatus({ i, stale }: { i: RslItem; stale?: boolean }) {
 function AnalyzerCard({
   i,
   src,
-  stale,
   onOpen,
 }: {
   i: RslItem;
   src: RslItem | undefined;
-  stale: boolean;
   onOpen: () => void;
 }) {
   const act = src ? cdActivityNow(src) : null;
   const w = wear(i);
-  const border = stale ? "border-amber-500/50" : (w ?? 0) >= 1 ? "border-destructive/40" : "";
+  const border = (w ?? 0) >= 1 ? "border-destructive/40" : "";
   return (
     <button
       type="button"
@@ -527,7 +521,7 @@ function AnalyzerCard({
         <span className="text-sm font-medium">
           {i.code} <span className="font-normal text-muted-foreground">· {i.kind}</span>
         </span>
-        <ItemStatus i={i} stale={stale} />
+        <ItemStatus i={i} />
       </div>
       <p className="mt-0.5 truncate text-muted-foreground" title={i.sample_name ?? ""}>
         {[i.points, i.sample_name].filter(Boolean).join(" · ") || "—"}
@@ -546,9 +540,6 @@ function AnalyzerCard({
           Cd-109: {fmtMbq(act)} ({fmtPct(act === null ? null : act / CD109_NOMINAL_MBQ)})
           {act !== null && act < CD109_RENEW_MBQ ? " — шинэчлэх" : ""}
         </p>
-      )}
-      {stale && i.last_measured && (
-        <p className="mt-0.5 text-amber-700 dark:text-amber-400">сүүлд {i.last_measured}</p>
       )}
     </button>
   );
@@ -906,7 +897,6 @@ const STR_FIELDS = [
   "model",
   "serial",
   "commissioned",
-  "last_measured",
   "analyzer_code",
   "isotope",
   "source_code",
@@ -1011,7 +1001,6 @@ function ItemDialog({
       commissioned: s("commissioned"),
       year: yr,
       status,
-      last_measured: cat === "analyzer" ? s("last_measured") : null,
       utilization: cat === "analyzer" && util.trim() !== "" ? Number(util) / 100 : null,
       analyzer_code: cat === "source" ? s("analyzer_code") : null,
       isotope: cat === "source" ? s("isotope") || "Cd-109" : null,
@@ -1111,7 +1100,6 @@ function ItemDialog({
                 <F label="Шугам">{In("line", "V шугам")}</F>
                 <F label="Цэг (Amdel код)">{In("points", "571 эсвэл 574, 575, 577")}</F>
                 <F label="Дээжний нэр">{In("sample_name", "Руда5Сек")}</F>
-                <F label="Сүүлийн хэмжилт">{In("last_measured", "2026-11-17 15:13")}</F>
                 <F label="Ашиглалтын коэффициент, %">
                   <Input
                     value={util}
