@@ -177,4 +177,4 @@ export function cdRenewDate(i: Pick<RslItem, "activity_mbq" | "activity_date">):
 
 export const fmtPct = (r: number | null) => (r === null ? "—" : `${Math.round(r * 100)}%`);
 export const fmtMbq = (v: number | null) =>
-  v === null ? "—" : v >= 10 ? `${Math.round(v)} MBq` : `${v.toFixed(1)} MBq`;
+  v === null ? "—" : v >= 10 ? `${Math.round(v)} MBq` : `${v.toFixed(1)} MBq`; 
