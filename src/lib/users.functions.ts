@@ -21,6 +21,7 @@ export type SectionUser = {
   email: string;
   isAdmin: boolean;
   isControllerEditor: boolean;
+  isRslEditor: boolean;
   sections: string[];
 };
 
@@ -39,10 +40,12 @@ export const listSectionUsers = createServerFn({ method: "GET" })
         email: list?.users.find((x) => x.id === r.user_id)?.email ?? "",
         isAdmin: false,
         isControllerEditor: false,
+        isRslEditor: false,
         sections: [],
       };
       if (r.role === "admin") u.isAdmin = true;
       else if (r.role === "controller_editor") u.isControllerEditor = true;
+      else if (r.role === "rsl_editor") u.isRslEditor = true;
       else if (r.section && !u.sections.includes(r.section)) u.sections.push(r.section);
       byUser.set(r.user_id, u);
     }
@@ -67,6 +70,11 @@ export const createSectionUser = createServerFn({ method: "POST" })
           email: z.string().email(),
           password: z.string().min(8),
         }),
+        z.object({
+          kind: z.literal("rsl"),
+          email: z.string().email(),
+          password: z.string().min(8),
+        }),
       ])
       .parse(d),
   )
@@ -83,11 +91,13 @@ export const createSectionUser = createServerFn({ method: "POST" })
     const { error: roleErr } = await supabaseAdmin.from("user_roles").insert(
       data.kind === "controller"
         ? [{ user_id: userId, role: "controller_editor" as const, section: null as string | null }]
-        : data.sections.map((section) => ({
-            user_id: userId,
-            role: "section_user" as "section_user" | "controller_editor",
-            section: section as string | null,
-          })),
+        : data.kind === "rsl"
+          ? [{ user_id: userId, role: "rsl_editor" as const, section: null as string | null }]
+          : data.sections.map((section) => ({
+              user_id: userId,
+              role: "section_user" as "section_user" | "controller_editor" | "rsl_editor",
+              section: section as string | null,
+            })),
     );
     if (roleErr) {
       // Эрх оноож чадаагүй бол эрхгүй бүртгэл үлдээхгүй

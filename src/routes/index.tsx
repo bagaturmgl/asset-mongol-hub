@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 const PAGE_SIZE = 50;
 const LIST_STATE_KEY = "equipment-list-state";
 import {
+  Atom,
   Cpu,
   CircleHelp,
   ClipboardPlus,
@@ -330,6 +331,11 @@ function Index() {
               <Button type="button" size="sm" variant="ghost" asChild>
                 <Link to="/controllers">
                   <Cpu className="size-4" /> DCS/PLC
+                </Link>
+              </Button>
+              <Button type="button" size="sm" variant="ghost" asChild>
+                <Link to="/rsl">
+                  <Atom className="size-4" /> RSL
                 </Link>
               </Button>
             </nav>

@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ControllersRouteImport } from './routes/controllers'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as RslRouteImport } from './routes/rsl'
 import { Route as UsersRouteImport } from './routes/users'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RslRoute = RslRouteImport.update({
+  id: '/rsl',
+  path: '/rsl',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UsersRoute = UsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/controllers': typeof ControllersRoute
   '/dashboard': typeof DashboardRoute
+  '/rsl': typeof RslRoute
   '/users': typeof UsersRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/controllers': typeof ControllersRoute
   '/dashboard': typeof DashboardRoute
+  '/rsl': typeof RslRoute
   '/users': typeof UsersRoute
 }
 export interface FileRoutesById {
@@ -61,14 +69,22 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/controllers': typeof ControllersRoute
   '/dashboard': typeof DashboardRoute
+  '/rsl': typeof RslRoute
   '/users': typeof UsersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/controllers' | '/dashboard' | '/users'
+  fullPaths: '/' | '/auth' | '/controllers' | '/dashboard' | '/rsl' | '/users'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/controllers' | '/dashboard' | '/users'
-  id: '__root__' | '/' | '/auth' | '/controllers' | '/dashboard' | '/users'
+  to: '/' | '/auth' | '/controllers' | '/dashboard' | '/rsl' | '/users'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/controllers'
+    | '/dashboard'
+    | '/rsl'
+    | '/users'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,6 +92,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ControllersRoute: typeof ControllersRoute
   DashboardRoute: typeof DashboardRoute
+  RslRoute: typeof RslRoute
   UsersRoute: typeof UsersRoute
 }
 
@@ -109,6 +126,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rsl': {
+      id: '/rsl'
+      path: '/rsl'
+      fullPath: '/rsl'
+      preLoaderRoute: typeof RslRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/users': {
       id: '/users'
       path: '/users'
@@ -124,6 +148,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ControllersRoute: ControllersRoute,
   DashboardRoute: DashboardRoute,
+  RslRoute: RslRoute,
   UsersRoute: UsersRoute,
 }
 export const routeTree = rootRouteImport

@@ -7,6 +7,8 @@ export type Access = {
   isAdmin: boolean;
   /** DCS/PLC бүртгэл нэмэх/засах эрх (админ эсвэл контроллерын инженер). */
   canEditControllers: boolean;
+  /** RSL (РШШЛХ) бүртгэл нэмэх/засах эрх (админ эсвэл RSL инженер). */
+  canEditRsl: boolean;
   /** Хэрэглэгчид оноосон бүх хэсгийн код (админд хоосон). */
   sections: string[];
   /**
@@ -17,7 +19,14 @@ export type Access = {
   loading: boolean;
 };
 
-const EMPTY: Omit<Access, "loading"> = { user: null, isAdmin: false, canEditControllers: false, sections: [], section: null };
+const EMPTY: Omit<Access, "loading"> = {
+  user: null,
+  isAdmin: false,
+  canEditControllers: false,
+  canEditRsl: false,
+  sections: [],
+  section: null,
+};
 
 export function useAuth(): Access & { canEdit: (section: string) => boolean } {
   const [state, setState] = useState<Access>({ ...EMPTY, loading: true });
@@ -46,6 +55,7 @@ export function useAuth(): Access & { canEdit: (section: string) => boolean } {
         user,
         isAdmin: rows.some((r) => r.role === "admin"),
         canEditControllers: rows.some((r) => r.role === "admin" || r.role === "controller_editor"),
+        canEditRsl: rows.some((r) => r.role === "admin" || r.role === "rsl_editor"),
         sections,
         section: sections.length ? sections.join(", ") : null,
         loading: false,

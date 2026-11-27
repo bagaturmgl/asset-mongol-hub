@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
+  Atom,
   Cpu,
   Download,
   Factory,
@@ -214,6 +215,11 @@ function ControllersPage() {
             <span className={buttonVariants({ size: "sm" })} aria-current="page">
               <Cpu className="size-4" /> DCS/PLC
             </span>
+            <Button size="sm" variant="ghost" asChild>
+              <Link to="/rsl">
+                <Atom className="size-4" /> RSL
+              </Link>
+            </Button>
           </nav>
         </div>
       </header>

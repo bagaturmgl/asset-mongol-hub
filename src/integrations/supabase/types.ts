@@ -14,6 +14,144 @@ export type Database = {
   }
   public: {
     Tables: {
+      rsl_equipment: {
+        Row: {
+          activity_date: string | null
+          activity_mbq: number | null
+          analyzer_code: string | null
+          category: string
+          code: string | null
+          commissioned: string | null
+          created_at: string
+          id: string
+          isotope: string | null
+          kind: string | null
+          last_measured: string | null
+          line: string | null
+          maintenance_history: string | null
+          manufacturer: string | null
+          model: string | null
+          notes: string | null
+          permit_no: string | null
+          points: string | null
+          sample_name: string | null
+          section: string | null
+          serial: string | null
+          source_code: string | null
+          status: string
+          sub_section: string | null
+          tag: string
+          trace: string | null
+          updated_at: string
+          utilization: number | null
+          year: number | null
+        }
+        Insert: {
+          activity_date?: string | null
+          activity_mbq?: number | null
+          analyzer_code?: string | null
+          category: string
+          code?: string | null
+          commissioned?: string | null
+          created_at?: string
+          id?: string
+          isotope?: string | null
+          kind?: string | null
+          last_measured?: string | null
+          line?: string | null
+          maintenance_history?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          notes?: string | null
+          permit_no?: string | null
+          points?: string | null
+          sample_name?: string | null
+          section?: string | null
+          serial?: string | null
+          source_code?: string | null
+          status?: string
+          sub_section?: string | null
+          tag: string
+          trace?: string | null
+          updated_at?: string
+          utilization?: number | null
+          year?: number | null
+        }
+        Update: {
+          activity_date?: string | null
+          activity_mbq?: number | null
+          analyzer_code?: string | null
+          category?: string
+          code?: string | null
+          commissioned?: string | null
+          created_at?: string
+          id?: string
+          isotope?: string | null
+          kind?: string | null
+          last_measured?: string | null
+          line?: string | null
+          maintenance_history?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          notes?: string | null
+          permit_no?: string | null
+          points?: string | null
+          sample_name?: string | null
+          section?: string | null
+          serial?: string | null
+          source_code?: string | null
+          status?: string
+          sub_section?: string | null
+          tag?: string
+          trace?: string | null
+          updated_at?: string
+          utilization?: number | null
+          year?: number | null
+        }
+        Relationships: []
+      }
+      rsl_traces: {
+        Row: {
+          analyzer_code: string | null
+          ap_group: string | null
+          code: string
+          created_at: string
+          length_m: number | null
+          notes: string | null
+          sample_name: string | null
+          section: string | null
+          signal_m: number | null
+          sub_section: string | null
+          updated_at: string
+        }
+        Insert: {
+          analyzer_code?: string | null
+          ap_group?: string | null
+          code: string
+          created_at?: string
+          length_m?: number | null
+          notes?: string | null
+          sample_name?: string | null
+          section?: string | null
+          signal_m?: number | null
+          sub_section?: string | null
+          updated_at?: string
+        }
+        Update: {
+          analyzer_code?: string | null
+          ap_group?: string | null
+          code?: string
+          created_at?: string
+          length_m?: number | null
+          notes?: string | null
+          sample_name?: string | null
+          section?: string | null
+          signal_m?: number | null
+          sub_section?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       controllers: {
         Row: {
           commissioned: string | null
@@ -282,7 +420,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "section_user" | "controller_editor"
+      app_role: "admin" | "section_user" | "controller_editor" | "rsl_editor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -410,7 +548,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "section_user", "controller_editor"],
+      app_role: ["admin", "section_user", "controller_editor", "rsl_editor"],
     },
   },
 } as const

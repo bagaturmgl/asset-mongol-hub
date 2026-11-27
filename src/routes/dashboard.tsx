@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { Cpu, Factory, LayoutDashboard, List, Loader2 } from "lucide-react";
+import { Atom, Cpu, Factory, LayoutDashboard, List, Loader2 } from "lucide-react";
 
 import { DeviceGroupPanel } from "@/components/DeviceGroupPanel";
 import { OfflineBanner } from "@/components/OfflineBanner";
@@ -61,6 +61,11 @@ function DashboardPage() {
             <Button size="sm" variant="ghost" asChild>
               <Link to="/controllers">
                 <Cpu className="size-4" /> DCS/PLC
+              </Link>
+            </Button>
+            <Button size="sm" variant="ghost" asChild>
+              <Link to="/rsl">
+                <Atom className="size-4" /> RSL
               </Link>
             </Button>
           </nav>
