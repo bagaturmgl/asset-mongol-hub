@@ -68,10 +68,14 @@ export const Route = createFileRoute("/rsl")({
       { title: "RSEL — Рентген шуурхай шинжилгээний лаборатори | ХХХА" },
       {
         name: "description",
-        content: "Рентген шуурхай шинжилгээний лаборатори: шингэн дээжний анализатор, Cd-109 үүсгүүр, лаборатори, ДАДАС трасс.",
+        content:
+          "Рентген шуурхай шинжилгээний лаборатори: шингэн дээжний анализатор, Cd-109 үүсгүүр, лаборатори, ДАДАС трасс.",
       },
       { property: "og:title", content: "RSEL — Рентген шуурхай шинжилгээний лаборатори | ХХХА" },
-      { property: "og:description", content: "Рентген шуурхай шинжилгээний лабораторийн тоног төхөөрөмжийн бүртгэл." },
+      {
+        property: "og:description",
+        content: "Рентген шуурхай шинжилгээний лабораторийн тоног төхөөрөмжийн бүртгэл.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -283,7 +287,7 @@ function RslPage() {
                 note={`${items.filter((i) => i.category === "lab").length} лабораторийн, ${items.filter((i) => i.category === "dadas").length} ДАДАС`}
               />
               <Metric
-                label="Ашиглалтын хугацаа дууссан"
+                label="Ашиглалтын хугацаа хэтэрсэн"
                 value={expired.length}
                 tone="bad"
                 note="анализатор ба лаборатори"
@@ -375,6 +379,7 @@ function RslPage() {
                           </div>
                           <ItemStatus i={i} />
                         </div>
+                        <OverrunTag i={i} />
                         <div className="mt-3 flex items-baseline justify-between text-xs">
                           <span>{i.year ?? "он —"}</span>
                           <span className="text-muted-foreground">насжилт {fmtPct(wear(i))}</span>
@@ -498,9 +503,21 @@ function Metric({
 }
 
 function ItemStatus({ i }: { i: RslItem }) {
-  if (i.status !== "active") return <Pill tone="muted">{statusLabel(i.status)}</Pill>;
-  if ((wear(i) ?? 0) >= 1) return <Pill tone="bad">хугацаа дууссан</Pill>;
-  return <Pill tone="ok">ажиллаж байна</Pill>;
+  return i.status === "active" ? (
+    <Pill tone="ok">ажиллаж байна</Pill>
+  ) : (
+    <Pill tone="muted">{statusLabel(i.status)}</Pill>
+  );
+}
+
+/** Ажлын төлөвийн дор: ашиглалтын хугацаа (норм) хэтэрсэн бол */
+function OverrunTag({ i }: { i: RslItem }) {
+  if ((wear(i) ?? 0) < 1) return null;
+  return (
+    <div className="mt-0.5 flex justify-end">
+      <Pill tone="bad">ашиглалтын хугацаа хэтэрсэн</Pill>
+    </div>
+  );
 }
 
 function AnalyzerCard({
@@ -527,6 +544,7 @@ function AnalyzerCard({
         </span>
         <ItemStatus i={i} />
       </div>
+      <OverrunTag i={i} />
       <p className="mt-0.5 truncate text-muted-foreground" title={i.sample_name ?? ""}>
         {[i.points, i.sample_name].filter(Boolean).join(" · ") || "—"}
       </p>
@@ -656,7 +674,7 @@ function DadasBoard({
               <p className="mt-1 text-2xl font-semibold tabular-nums">{list.length}</p>
               <p className="text-xs text-muted-foreground">
                 трасст {assigned} ·{" "}
-                <span className={exp ? "text-destructive" : ""}>хугацаа дууссан {exp}</span>
+                <span className={exp ? "text-destructive" : ""}>хугацаа хэтэрсэн {exp}</span>
               </p>
             </div>
           );
