@@ -108,7 +108,7 @@ function UsersPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [sections, setSections] = useState<string[]>([]);
-  const [kind, setKind] = useState<"section" | "controller" | "rsl">("section");
+  const [kind, setKind] = useState<"section" | "controller" | "rsl" | "editor">("section");
   const [editing, setEditing] = useState<{ user_id: string; sections: string[] } | null>(null);
   // Устгахаар сонгосон хэрэглэгч — апп доторх баталгаажуулах цонх (хөтчийн confirm() зарим орчинд гарахгүй)
   const [deleting, setDeleting] = useState<SectionUser | null>(null);
@@ -215,6 +215,7 @@ function UsersPage() {
                 ["section", "Хэсгийн хэрэглэгч"],
                 ["controller", "DCS/PLC инженер (ASU/БТАХ)"],
                 ["rsl", "RSL инженер (РШШЛХ)"],
+                ["editor", "Бүх бүртгэл засагч"],
               ] as const
             ).map(([k, label]) => (
               <Button
@@ -237,9 +238,11 @@ function UsersPage() {
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">
-            {kind === "rsl"
-              ? "Зөвхөн RSL (РШШЛХ) бүртгэл нэмж, засварлана. Бусад бүртгэлийг зөвхөн харна."
-              : "Зөвхөн DCS/PLC бүртгэл нэмж, засварлана. Тоног төхөөрөмжийн бүртгэлийг зөвхөн харна."}
+            {kind === "editor"
+              ? "Бүх бүртгэлийг (тоног төхөөрөмж, DCS/PLC, RSEL) нэмж, засварлана. Устгах, хэрэглэгч удирдах эрхгүй."
+              : kind === "rsl"
+                ? "Зөвхөн RSL (РШШЛХ) бүртгэл нэмж, засварлана. Бусад бүртгэлийг зөвхөн харна."
+                : "Зөвхөн DCS/PLC бүртгэл нэмж, засварлана. Тоног төхөөрөмжийн бүртгэлийг зөвхөн харна."}
           </p>
         )}
         <Button type="submit" disabled={(kind === "section" && !sections.length) || add.isPending}>
@@ -256,6 +259,8 @@ function UsersPage() {
                 <span className="min-w-0 flex-1 truncate">{u.email}</span>
                 {u.isAdmin ? (
                   <span className="text-muted-foreground">Админ</span>
+                ) : u.isEditor ? (
+                  <span className="text-muted-foreground">Бүх бүртгэл засагч</span>
                 ) : u.isControllerEditor ? (
                   <span className="text-muted-foreground">DCS/PLC инженер</span>
                 ) : u.isRslEditor ? (
@@ -265,7 +270,7 @@ function UsersPage() {
                 )}
                 {!u.isAdmin && !isEditing && (
                   <span className="flex shrink-0">
-                    {!u.isControllerEditor && !u.isRslEditor && (
+                    {!u.isControllerEditor && !u.isRslEditor && !u.isEditor && (
                       <Button
                         size="icon"
                         variant="ghost"
