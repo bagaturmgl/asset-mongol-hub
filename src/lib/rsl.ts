@@ -23,7 +23,6 @@ export type RslItem = {
   commissioned: string | null;
   year: number | null;
   status: string;
-  last_measured: string | null;
   utilization: number | null;
   /** Үүсгүүрийн харьяалах анализатор (A571) */
   analyzer_code: string | null;
@@ -179,23 +178,3 @@ export function cdRenewDate(i: Pick<RslItem, "activity_mbq" | "activity_date">):
 export const fmtPct = (r: number | null) => (r === null ? "—" : `${Math.round(r * 100)}%`);
 export const fmtMbq = (v: number | null) =>
   v === null ? "—" : v >= 10 ? `${Math.round(v)} MBq` : `${v.toFixed(1)} MBq`;
-
-/** Хэмжилт зогссон: сүүлийн хэмжилт бусдынхаас 1 хоногоос илүү хоцорсон */
-export function staleAnalyzers(items: RslItem[]): Set<string> {
-  const dates = items
-    .filter((i) => i.category === "analyzer" && i.last_measured)
-    .map((i) => new Date(i.last_measured!.replace(" ", "T")).getTime())
-    .filter((t) => !Number.isNaN(t));
-  if (!dates.length) return new Set();
-  const latest = Math.max(...dates);
-  return new Set(
-    items
-      .filter(
-        (i) =>
-          i.category === "analyzer" &&
-          i.last_measured &&
-          latest - new Date(i.last_measured.replace(" ", "T")).getTime() > 86_400_000,
-      )
-      .map((i) => i.id),
-  );
-}
