@@ -14,6 +14,219 @@ export type Database = {
   }
   public: {
     Tables: {
+      controllers: {
+        Row: {
+          ch_ai: number | null
+          ch_ao: number | null
+          ch_di: number | null
+          ch_do: number | null
+          ch_pi: number | null
+          commissioned: string | null
+          created_at: string
+          ctype: string
+          eth_capacity: number | null
+          eth_devices: number | null
+          eth_signals: number | null
+          id: string
+          io_ai: number | null
+          io_ao: number | null
+          io_di: number | null
+          io_do: number | null
+          io_pi: number | null
+          ip: string | null
+          main_equipment: string | null
+          main_equipment_name: string | null
+          manufacturer: string | null
+          mb_capacity: number | null
+          mb_devices: number | null
+          mb_signals: number | null
+          mod_ai: number | null
+          mod_ao: number | null
+          mod_di: number | null
+          mod_do: number | null
+          mod_pi: number | null
+          model: string | null
+          notes: string | null
+          pb_capacity: number | null
+          pb_devices: number | null
+          pb_signals: number | null
+          section: string
+          status: string
+          sub_section: string | null
+          tag: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          ch_ai?: number | null
+          ch_ao?: number | null
+          ch_di?: number | null
+          ch_do?: number | null
+          ch_pi?: number | null
+          commissioned?: string | null
+          created_at?: string
+          ctype: string
+          eth_capacity?: number | null
+          eth_devices?: number | null
+          eth_signals?: number | null
+          id?: string
+          io_ai?: number | null
+          io_ao?: number | null
+          io_di?: number | null
+          io_do?: number | null
+          io_pi?: number | null
+          ip?: string | null
+          main_equipment?: string | null
+          main_equipment_name?: string | null
+          manufacturer?: string | null
+          mb_capacity?: number | null
+          mb_devices?: number | null
+          mb_signals?: number | null
+          mod_ai?: number | null
+          mod_ao?: number | null
+          mod_di?: number | null
+          mod_do?: number | null
+          mod_pi?: number | null
+          model?: string | null
+          notes?: string | null
+          pb_capacity?: number | null
+          pb_devices?: number | null
+          pb_signals?: number | null
+          section: string
+          status?: string
+          sub_section?: string | null
+          tag: string
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          ch_ai?: number | null
+          ch_ao?: number | null
+          ch_di?: number | null
+          ch_do?: number | null
+          ch_pi?: number | null
+          commissioned?: string | null
+          created_at?: string
+          ctype?: string
+          eth_capacity?: number | null
+          eth_devices?: number | null
+          eth_signals?: number | null
+          id?: string
+          io_ai?: number | null
+          io_ao?: number | null
+          io_di?: number | null
+          io_do?: number | null
+          io_pi?: number | null
+          ip?: string | null
+          main_equipment?: string | null
+          main_equipment_name?: string | null
+          manufacturer?: string | null
+          mb_capacity?: number | null
+          mb_devices?: number | null
+          mb_signals?: number | null
+          mod_ai?: number | null
+          mod_ao?: number | null
+          mod_di?: number | null
+          mod_do?: number | null
+          mod_pi?: number | null
+          model?: string | null
+          notes?: string | null
+          pb_capacity?: number | null
+          pb_devices?: number | null
+          pb_signals?: number | null
+          section?: string
+          status?: string
+          sub_section?: string | null
+          tag?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      equipment: {
+        Row: {
+          asset_serial: string | null
+          category: string
+          created_at: string
+          factory_serial: string | null
+          function_code: string | null
+          id: string
+          isotope: string | null
+          main_equipment: string
+          main_equipment_name: string | null
+          maintenance_history: string | null
+          manufacturer: string | null
+          model: string | null
+          notes: string | null
+          parameter: string | null
+          section: string
+          sequence: string
+          source_code: string | null
+          source_serial: string | null
+          status: string
+          sub_section: string
+          subtype: string
+          tag_name: string
+          unit: string
+          updated_at: string
+          year: string
+        }
+        Insert: {
+          asset_serial?: string | null
+          category: string
+          created_at?: string
+          factory_serial?: string | null
+          function_code?: string | null
+          id?: string
+          isotope?: string | null
+          main_equipment: string
+          main_equipment_name?: string | null
+          maintenance_history?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          notes?: string | null
+          parameter?: string | null
+          section: string
+          sequence: string
+          source_code?: string | null
+          source_serial?: string | null
+          status?: string
+          sub_section: string
+          subtype: string
+          tag_name: string
+          unit: string
+          updated_at?: string
+          year: string
+        }
+        Update: {
+          asset_serial?: string | null
+          category?: string
+          created_at?: string
+          factory_serial?: string | null
+          function_code?: string | null
+          id?: string
+          isotope?: string | null
+          main_equipment?: string
+          main_equipment_name?: string | null
+          maintenance_history?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          notes?: string | null
+          parameter?: string | null
+          section?: string
+          sequence?: string
+          source_code?: string | null
+          source_serial?: string | null
+          status?: string
+          sub_section?: string
+          subtype?: string
+          tag_name?: string
+          unit?: string
+          updated_at?: string
+          year?: string
+        }
+        Relationships: []
+      }
       rsl_equipment: {
         Row: {
           activity_date: string | null
@@ -108,7 +321,15 @@ export type Database = {
           utilization?: number | null
           year?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "rsl_equipment_trace_fkey"
+            columns: ["trace"]
+            isOneToOne: false
+            referencedRelation: "rsl_traces"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       rsl_traces: {
         Row: {
@@ -152,219 +373,6 @@ export type Database = {
         }
         Relationships: []
       }
-      controllers: {
-        Row: {
-          commissioned: string | null
-          created_at: string
-          ctype: string
-          id: string
-          io_ai: number | null
-          io_ao: number | null
-          io_di: number | null
-          io_do: number | null
-          ip: string | null
-          main_equipment: string | null
-          main_equipment_name: string | null
-          manufacturer: string | null
-          model: string | null
-          notes: string | null
-          section: string
-          status: string
-          sub_section: string | null
-          tag: string
-          unit: string
-          updated_at: string
-          mod_ai: number | null
-          mod_ao: number | null
-          mod_di: number | null
-          mod_do: number | null
-          mod_pi: number | null
-          ch_ai: number | null
-          ch_ao: number | null
-          ch_di: number | null
-          ch_do: number | null
-          ch_pi: number | null
-          io_pi: number | null
-          pb_capacity: number | null
-          pb_devices: number | null
-          pb_signals: number | null
-          mb_capacity: number | null
-          mb_devices: number | null
-          mb_signals: number | null
-          eth_capacity: number | null
-          eth_devices: number | null
-          eth_signals: number | null
-        }
-        Insert: {
-          commissioned?: string | null
-          created_at?: string
-          ctype: string
-          id?: string
-          io_ai?: number | null
-          io_ao?: number | null
-          io_di?: number | null
-          io_do?: number | null
-          ip?: string | null
-          main_equipment?: string | null
-          main_equipment_name?: string | null
-          manufacturer?: string | null
-          model?: string | null
-          notes?: string | null
-          section: string
-          status?: string
-          sub_section?: string | null
-          tag: string
-          unit: string
-          updated_at?: string
-          mod_ai?: number | null
-          mod_ao?: number | null
-          mod_di?: number | null
-          mod_do?: number | null
-          mod_pi?: number | null
-          ch_ai?: number | null
-          ch_ao?: number | null
-          ch_di?: number | null
-          ch_do?: number | null
-          ch_pi?: number | null
-          io_pi?: number | null
-          pb_capacity?: number | null
-          pb_devices?: number | null
-          pb_signals?: number | null
-          mb_capacity?: number | null
-          mb_devices?: number | null
-          mb_signals?: number | null
-          eth_capacity?: number | null
-          eth_devices?: number | null
-          eth_signals?: number | null
-        }
-        Update: {
-          commissioned?: string | null
-          created_at?: string
-          ctype?: string
-          id?: string
-          io_ai?: number | null
-          io_ao?: number | null
-          io_di?: number | null
-          io_do?: number | null
-          ip?: string | null
-          main_equipment?: string | null
-          main_equipment_name?: string | null
-          manufacturer?: string | null
-          model?: string | null
-          notes?: string | null
-          section?: string
-          status?: string
-          sub_section?: string | null
-          tag?: string
-          unit?: string
-          updated_at?: string
-          mod_ai?: number | null
-          mod_ao?: number | null
-          mod_di?: number | null
-          mod_do?: number | null
-          mod_pi?: number | null
-          ch_ai?: number | null
-          ch_ao?: number | null
-          ch_di?: number | null
-          ch_do?: number | null
-          ch_pi?: number | null
-          io_pi?: number | null
-          pb_capacity?: number | null
-          pb_devices?: number | null
-          pb_signals?: number | null
-          mb_capacity?: number | null
-          mb_devices?: number | null
-          mb_signals?: number | null
-          eth_capacity?: number | null
-          eth_devices?: number | null
-          eth_signals?: number | null
-        }
-        Relationships: []
-      }
-      equipment: {
-        Row: {
-          asset_serial: string | null
-          category: string
-          created_at: string
-          factory_serial: string | null
-          function_code: string | null
-          id: string
-          isotope: string | null
-          main_equipment: string
-          main_equipment_name: string | null
-          maintenance_history: string | null
-          manufacturer: string | null
-          model: string | null
-          notes: string | null
-          parameter: string | null
-          section: string
-          sequence: string
-          source_code: string | null
-          source_serial: string | null
-          status: string
-          sub_section: string
-          subtype: string
-          tag_name: string
-          unit: string
-          updated_at: string
-          year: string
-        }
-        Insert: {
-          asset_serial?: string | null
-          category: string
-          created_at?: string
-          factory_serial?: string | null
-          function_code?: string | null
-          id?: string
-          isotope?: string | null
-          main_equipment: string
-          main_equipment_name?: string | null
-          maintenance_history?: string | null
-          manufacturer?: string | null
-          model?: string | null
-          notes?: string | null
-          parameter?: string | null
-          section: string
-          sequence: string
-          source_code?: string | null
-          source_serial?: string | null
-          status?: string
-          sub_section: string
-          subtype: string
-          tag_name: string
-          unit: string
-          updated_at?: string
-          year: string
-        }
-        Update: {
-          asset_serial?: string | null
-          category?: string
-          created_at?: string
-          factory_serial?: string | null
-          function_code?: string | null
-          id?: string
-          isotope?: string | null
-          main_equipment?: string
-          main_equipment_name?: string | null
-          maintenance_history?: string | null
-          manufacturer?: string | null
-          model?: string | null
-          notes?: string | null
-          parameter?: string | null
-          section?: string
-          sequence?: string
-          source_code?: string | null
-          source_serial?: string | null
-          status?: string
-          sub_section?: string
-          subtype?: string
-          tag_name?: string
-          unit?: string
-          updated_at?: string
-          year?: string
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string
@@ -395,6 +403,7 @@ export type Database = {
     }
     Functions: {
       can_edit_controllers: { Args: { _user_id: string }; Returns: boolean }
+      can_edit_rsl: { Args: { _user_id: string }; Returns: boolean }
       can_edit_section: {
         Args: { _section: string; _user_id: string }
         Returns: boolean
