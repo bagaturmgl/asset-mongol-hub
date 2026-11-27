@@ -582,7 +582,13 @@ function AnalyzerCard({
       </div>
       {src && (
         <p
-          className={`mt-1.5 ${act !== null && act < CD109_RENEW_MBQ ? "font-medium text-destructive" : "text-muted-foreground"}`}
+          className={`mt-1.5 ${
+            act === null
+              ? "text-muted-foreground"
+              : act < CD109_RENEW_MBQ
+                ? "font-medium text-destructive"
+                : "text-emerald-700 dark:text-emerald-400"
+          }`}
         >
           Cd-109: {fmtMbq(act)} ({fmtPct(act === null ? null : act / CD109_NOMINAL_MBQ)})
           {act !== null && act < CD109_RENEW_MBQ ? " — шинэчлэх" : ""}
