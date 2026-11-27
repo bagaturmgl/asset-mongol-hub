@@ -143,7 +143,7 @@ export function ageYears(i: Pick<RslItem, "year">, now = new Date()): number | n
   return i.year ? Math.max(0, now.getFullYear() - i.year) : null;
 }
 
-/** Насжилт / норм (1 = 100% — хугацаа дууссан) */
+/** Насжилт / норм (≥ 1 — ашиглалтын хугацаа хэтэрсэн) */
 export function wear(
   i: Pick<RslItem, "year" | "category" | "kind">,
   now = new Date(),
